@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://cdmsuufp5tx2p"]
+
+[ext_resource type="Script" uid="uid://dn6rnvfq01rxe" path="res://client/scripts/UserAuth.gd" id="1_2v18g"]
+
+[node name="UserAuth" type="Control" unique_id=2042426787]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2v18g")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=255244235]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -180.0
+offset_right = 220.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=1434753960]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1991693505]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=829371296]
+layout_mode = 2
+text = "Create account"
+horizontal_alignment = 1
+
+[node name="NameEdit" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1540632876]
+layout_mode = 2
+placeholder_text = "Display name"
+
+[node name="EmailEdit" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1349819709]
+layout_mode = 2
+placeholder_text = "Email"
+
+[node name="PasswordEdit" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1697189347]
+layout_mode = 2
+placeholder_text = "Password"
+secret = true
+
+[node name="SubmitButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1782097931]
+layout_mode = 2
+text = "Create account"
+
+[node name="ToggleModeButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1921170835]
+layout_mode = 2
+text = "Already have an account? Log in"
+
+[node name="StatusLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=265657661]
+layout_mode = 2
+text = "Create a new account to play."
+autowrap_mode = 3
+
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/SubmitButton" to="." method="_on_submit_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/ToggleModeButton" to="." method="_on_toggle_mode_button_pressed"]

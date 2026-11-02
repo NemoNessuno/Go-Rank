@@ -1,0 +1,146 @@
+[gd_scene format=3 uid="uid://cc70rmbdd68f"]
+
+[ext_resource type="Script" uid="uid://ceg506ax30lv1" path="res://client/scripts/GameBoard/GameBoard.gd" id="1_2cygc"]
+[ext_resource type="Script" uid="uid://crondkbb4hva0" path="res://client/scripts/GameBoard/BoardSurface.gd" id="2_1aotv"]
+
+[node name="GameBoard" type="Control" unique_id=1073299362]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2cygc")
+
+[node name="RootVBox" type="VBoxContainer" parent="." unique_id=1058842634]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.02
+anchor_right = 0.98
+anchor_bottom = 0.98
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="RootVBox" unique_id=1751801553]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="RootVBox/Header" unique_id=1404789040]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "9x9 Go Match"
+
+[node name="Spacer" type="Control" parent="RootVBox/Header" unique_id=429547891]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackButton" type="Button" parent="RootVBox/Header" unique_id=614825434]
+layout_mode = 2
+text = "Back to academy"
+
+[node name="RestartButton" type="Button" parent="RootVBox/Header" unique_id=90988116]
+layout_mode = 2
+text = "Restart"
+
+[node name="PassButton" type="Button" parent="RootVBox/Header" unique_id=1774479720]
+layout_mode = 2
+text = "Pass"
+
+[node name="SaveSgfButton" type="Button" parent="RootVBox/Header" unique_id=1891851462]
+layout_mode = 2
+text = "Save SGF"
+
+[node name="LoadSgfButton" type="Button" parent="RootVBox/Header" unique_id=535899653]
+layout_mode = 2
+text = "Load SGF"
+
+[node name="MainHBox" type="HBoxContainer" parent="RootVBox" unique_id=1335536667]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="LeftPanel" type="VBoxContainer" parent="RootVBox/MainHBox" unique_id=2118149930]
+custom_maximum_size = Vector2(150, -1)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="StatusLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel" unique_id=639129740]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Black to move"
+
+[node name="BlackCapturesLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel" unique_id=853785169]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Black captures: 0"
+
+[node name="WhiteCapturesLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel" unique_id=1143168614]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "White captures: 0"
+
+[node name="KomiRow" type="HBoxContainer" parent="RootVBox/MainHBox/LeftPanel" unique_id=1837675476]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="KomiLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel/KomiRow" unique_id=1806479416]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Komi:"
+
+[node name="KomiInput" type="LineEdit" parent="RootVBox/MainHBox/LeftPanel/KomiRow" unique_id=1225971214]
+custom_maximum_size = Vector2(75, -1)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "6.0"
+placeholder_text = "6.0"
+alignment = 2
+max_length = 5
+
+[node name="FinalScoreLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel" unique_id=872482454]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Final Score"
+
+[node name="BoardPanel" type="CenterContainer" parent="RootVBox/MainHBox" unique_id=644996909]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="BoardSurface" type="Control" parent="RootVBox/MainHBox/BoardPanel" unique_id=467932961]
+custom_minimum_size = Vector2(520, 520)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_1aotv")
+
+[node name="VariationPanel" type="PanelContainer" parent="RootVBox/MainHBox" unique_id=423793110]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VariationVBox" type="VBoxContainer" parent="RootVBox/MainHBox/VariationPanel" unique_id=649161586]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VariationTitle" type="Label" parent="RootVBox/MainHBox/VariationPanel/VariationVBox" unique_id=629090929]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Variations"
+
+[node name="VariationTree" type="GraphEdit" parent="RootVBox/MainHBox/VariationPanel/VariationVBox" unique_id=855145381]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+show_grid = false
+connection_lines_thickness = 1.0
+minimap_enabled = false
+show_menu = false

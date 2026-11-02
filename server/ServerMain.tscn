@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://cjfkyngomeepw"]
+
+[ext_resource type="Script" uid="uid://dwq2vrb7rsigu" path="res://server/ServerMain.gd" id="1_3l06q"]
+[ext_resource type="Script" uid="uid://cprv388v5aik4" path="res://server/UserRepository.gd" id="2_3l06q"]
+
+[node name="ServerMain" type="Node" unique_id=333101224]
+script = ExtResource("1_3l06q")
+
+[node name="UserRepository" type="Node" parent="." unique_id=611556922]
+script = ExtResource("2_3l06q")

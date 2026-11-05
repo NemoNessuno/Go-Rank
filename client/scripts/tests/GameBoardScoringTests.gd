@@ -1,7 +1,7 @@
 class_name GameBoardScoringTests
 extends GdUnitTestSuite
 
-const GameBoardScoringScript = preload("res://scripts/GameBoard/GameBoardScoring.gd")
+const GameBoardScoringScript = preload("res://client/scripts/GameBoard/GameBoardScoring.gd")
 const FIXTURE_ROOT := "res://tests/score_estimator_reference/fixtures"
 const DIRECTORIES := [
 		"easy",

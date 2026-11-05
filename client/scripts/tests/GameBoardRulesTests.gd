@@ -1,8 +1,8 @@
 class_name BoardRulesTest
 extends GdUnitTestSuite
 
-const GameBoardStateScript = preload("res://scripts/GameBoard/GameBoardState.gd")
-const GameBoardRulesScript = preload("res://scripts/GameBoard/GameBoardRules.gd")
+const GameBoardStateScript = preload("res://client/scripts/GameBoard/GameBoardState.gd")
+const GameBoardRulesScript = preload("res://client/scripts/GameBoard/GameBoardRules.gd")
 
 class BoardHarness extends Control:
 	const EMPTY := 0

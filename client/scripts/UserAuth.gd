@@ -1,9 +1,14 @@
 extends Control
 
-const USER_DATABASE := preload("res://server/UserDatabase.gd")
-
-var database: SQLite
 var create_mode := true
+
+const SERVER_ADDRESS := "127.0.0.1"
+const SERVER_PORT := 7000
+
+const NEUTRAL_COLOR := Color(0.8, 0.8, 0.8, 1.0)
+const OK_COLOR := Color(0.35, 1.0, 0.6, 1.0)
+const SIGNAL_COLOR := Color(1.0, 0.7, 0.2, 1.0)
+const ERROR_COLOR := Color(1.0, 0.35, 0.35, 1.0)
 
 @onready var title_label: Label = $PanelContainer/MarginContainer/VBoxContainer/TitleLabel
 @onready var name_edit: LineEdit = $PanelContainer/MarginContainer/VBoxContainer/NameEdit
@@ -14,14 +19,19 @@ var create_mode := true
 @onready var status_label: Label = $PanelContainer/MarginContainer/VBoxContainer/StatusLabel
 
 func _ready() -> void:
-	database = USER_DATABASE.create_database()
-	if database == null:
-		_set_status("Could not open the user database.", Color(1.0, 0.35, 0.35, 1.0))
-	_submit_button_disabled()
-	_sync_ui_mode()
+	var peer := ENetMultiplayerPeer.new()
+	var error := peer.create_client(SERVER_ADDRESS, SERVER_PORT)
 
-func _submit_button_disabled() -> void:
-	submit_button.disabled = database == null
+	if error != OK:
+		_set_status("Connection failed. Error code: %s" % error, ERROR_COLOR)
+		return
+	
+	multiplayer.multiplayer_peer = peer
+	_set_status("Connecting to server …", NEUTRAL_COLOR)
+	multiplayer.connected_to_server.connect(func(): _set_status("Connected to server.", OK_COLOR))
+	multiplayer.server_disconnected.connect(func(): _set_status("Disonnected from server.", SIGNAL_COLOR))
+	
+	_sync_ui_mode()
 
 func _sync_ui_mode() -> void:
 	name_edit.visible = create_mode
@@ -30,12 +40,10 @@ func _sync_ui_mode() -> void:
 		title_label.text = "Create account"
 		submit_button.text = "Create account"
 		toggle_button.text = "Already have an account? Log in"
-		_set_status("Create a new account to play.", Color(0.8, 0.8, 0.8, 1.0))
 	else:
 		title_label.text = "Log in"
 		submit_button.text = "Log in"
 		toggle_button.text = "Need an account? Register"
-		_set_status("Use your email and password to sign in.", Color(0.8, 0.8, 0.8, 1.0))
 
 func _set_status(message: String, color: Color) -> void:
 	status_label.text = message
@@ -49,41 +57,58 @@ func _generate_avatar_color(name: String) -> String:
 	return Color.from_hsv(hue, 0.7, 0.9).to_html()
 
 func _on_submit_button_pressed() -> void:
-	if database == null:
-		_set_status("The database is unavailable.", Color(1.0, 0.35, 0.35, 1.0))
+	if multiplayer == null or not multiplayer.connected_to_server:
+		_set_status("The server is unavailable.", ERROR_COLOR)
 		return
 
 	var email := email_edit.text.strip_edges()
 	var password := password_edit.text
 	if email.is_empty() or password.is_empty():
-		_set_status("Please enter your email and password.", Color(1.0, 0.7, 0.2, 1.0))
+		_set_status("Please enter your email and password.", SIGNAL_COLOR)
 		return
 
 	if create_mode:
 		var name := name_edit.text.strip_edges()
 		if name.is_empty():
-			_set_status("Please enter a display name.", Color(1.0, 0.7, 0.2, 1.0))
+			_set_status("Please enter a display name.", SIGNAL_COLOR)
 			return
-		var user := USER_DATABASE.create_user_with_avatar_transaction(database, name, email, password, _generate_avatar_color(name))
-		if user.is_empty():
-			_set_status("User creation failed. The email may already be in use.", Color(1.0, 0.35, 0.35, 1.0))
-			return
-		_set_status("Account created for %s." % user.get("name", ""), Color(0.35, 1.0, 0.6, 1.0))
-		name_edit.clear()
-		email_edit.clear()
-		password_edit.clear()
+		request_create_user.rpc_id(multiplayer.multiplayer_peer.get_instance_id(),
+		name, email, password, _generate_avatar_color(name))
 		return
 
-	if USER_DATABASE.authenticate_user(database, email, password):
-		var user := USER_DATABASE.get_user_by_email(database, email)
-		if user.is_empty():
-			_set_status("Login succeeded but the user record could not be loaded.", Color(1.0, 0.7, 0.2, 1.0))
-			return
-		_set_status("Logged in as %s." % user.get("name", ""), Color(0.35, 1.0, 0.6, 1.0))
-		return
-
-	_set_status("Invalid email or password.", Color(1.0, 0.35, 0.35, 1.0))
+	request_authenticate_user.rpc_id(multiplayer.multiplayer_peer.get_instance_id(), email, password)
 
 func _on_toggle_mode_button_pressed() -> void:
 	create_mode = not create_mode
 	_sync_ui_mode()
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_create_user(
+	_username: String,
+	_email: String,
+	_password: String,
+	_color: String
+) -> void:
+	pass
+	
+@rpc("any_peer", "call_remote", "reliable")
+func request_authenticate_user(
+	_email: String,
+	_password: String
+) -> void:
+	pass
+
+@rpc("authority", "call_remote", "reliable")
+func send_user_data(user_data: Dictionary) -> void:
+	_set_status("User logged in", OK_COLOR)
+	name_edit.clear()
+	email_edit.clear()
+	password_edit.clear()
+
+@rpc("authority", "call_remote", "reliable")
+func send_user_creation_failed(message: String) -> void:
+	_set_status(message, ERROR_COLOR)
+	
+@rpc("authority", "call_remote", "reliable")
+func send_user_authentication_failed(message: String) -> void:
+	_set_status(message, ERROR_COLOR)

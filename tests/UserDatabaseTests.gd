@@ -20,7 +20,7 @@ func test_database_creation() -> void:
 	db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('avatars', 'users', 'games');")
 	var tables: Array = db.query_result
 	assert_int(tables.size()).is_equal(3)
-	UserDatabaseScript.close_database()
+	UserDatabaseScript.close_database(db)
 
 func test_user_creation() -> void:
 	var db := _reset_test_db("gdunit_users_db_create_user")
@@ -31,7 +31,7 @@ func test_user_creation() -> void:
 	assert_that(user).is_not_empty()
 	assert_str(user.get("email", "")).is_equal("alice@example.com")
 	assert_str(user.get("name", "")).is_equal("Alice")
-	UserDatabaseScript.close_database()
+	UserDatabaseScript.close_database(db)
 
 func test_user_authentication() -> void:
 	var db := _reset_test_db("gdunit_users_db_auth")
@@ -40,7 +40,7 @@ func test_user_authentication() -> void:
 
 	assert_bool(UserDatabaseScript.authenticate_user(db, "bob@example.com", "supersecure")).is_true()
 	assert_bool(UserDatabaseScript.authenticate_user(db, "bob@example.com", "wrong-password")).is_false()
-	UserDatabaseScript.close_database()
+	UserDatabaseScript.close_database(db)
 
 func test_transaction_rollback_removes_avatar_on_failed_user_creation() -> void:
 	var db := _reset_test_db("gdunit_users_db_txn")
@@ -54,4 +54,4 @@ func test_transaction_rollback_removes_avatar_on_failed_user_creation() -> void:
 	assert_that(second_user).is_empty()
 	assert_int(UserDatabaseScript.get_user_count(db)).is_equal(1)
 	assert_int(UserDatabaseScript.get_avatar_count(db)).is_equal(1)
-	UserDatabaseScript.close_database()
+	UserDatabaseScript.close_database(db)

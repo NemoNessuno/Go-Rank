@@ -13,6 +13,7 @@ config_version=5
 config/name="GoRank"
 run/main_scene="uid://bbysqiurffjdo"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+run/flush_stdout_on_print=true
 config/icon="res://icon.svg"
 
 [display]

@@ -38,19 +38,6 @@ Write-Host "Projekt: $ProjectPath"
 $process = Start-Process `
     -FilePath $GodotPath `
     -ArgumentList $arguments `
-    -WorkingDirectory $ProjectPath `
-    -PassThru `
-    -RedirectStandardOutput $logFile `
-    -RedirectStandardError "$logFile.err"
+    -WorkingDirectory $ProjectPath
 
 Set-Content -Path $pidFile -Value $process.Id
-
-Write-Host ""
-Write-Host "Server gestartet."
-Write-Host "PID: $($process.Id)"
-Write-Host "Port: $Port"
-Write-Host "PID-Datei: $pidFile"
-Write-Host ""
-Write-Host "Godot-Ausgaben folgen:"
-Write-Host ""
-Get-Content $logFile -Wait

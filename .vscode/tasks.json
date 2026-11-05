@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Godot: Server neu starten",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts/start-server.ps1",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },    
+    {
+      "label": "Godot Console: Server neu starten",
+      "type": "shell",
+      "command": "& ${env:GODOT_CONSOLE_PATH} --path ${workspaceFolder} --headless -- --server",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Godot: Server stoppen",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts/stop-server.ps1",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

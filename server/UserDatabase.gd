@@ -5,9 +5,7 @@ const DEFAULT_DB_PATH := "user://go_rank_server.sqlite"
 const AuthenticationScript := preload("res://server/Authentication.gd")
 
 static func _execute_sql(db: SQLite, sql: String) -> bool:
-	db.query(sql)
-	
-	if db.error_message != "":
+	if not db.query(sql):
 		push_error("SQL-Fehler: %s\nSQL: %s" % [db.error_message, sql.strip_edges()])
 		return false
 

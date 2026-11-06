@@ -19,6 +19,10 @@ const ERROR_COLOR := Color(1.0, 0.35, 0.35, 1.0)
 @onready var status_label: Label = $PanelContainer/MarginContainer/VBoxContainer/StatusLabel
 
 func _ready() -> void:
+	Network.user_creation_failed.connect(_on_user_creation_failed)
+	Network.login_successful.connect(_on_login_successful)
+	Network.login_failed.connect(_on_login_failed)
+	
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_client(SERVER_ADDRESS, SERVER_PORT)
 
@@ -49,10 +53,10 @@ func _set_status(message: String, color: Color) -> void:
 	status_label.text = message
 	status_label.modulate = color
 
-func _generate_avatar_color(name: String) -> String:
+func _generate_avatar_color(user_name: String) -> String:
 	var hash_value := 0
-	for index in range(name.length()):
-		hash_value = (hash_value * 131 + ord(name[index])) & 0xFFFFFFFF
+	for index in range(user_name.length()):
+		hash_value = (hash_value * 131 + ord(user_name[index])) & 0xFFFFFFFF
 	var hue := float(hash_value % 360) / 360.0
 	return Color.from_hsv(hue, 0.7, 0.9).to_html()
 
@@ -68,47 +72,25 @@ func _on_submit_button_pressed() -> void:
 		return
 
 	if create_mode:
-		var name := name_edit.text.strip_edges()
-		if name.is_empty():
+		var user_name := name_edit.text.strip_edges()
+		if user_name.is_empty():
 			_set_status("Please enter a display name.", SIGNAL_COLOR)
 			return
-		request_create_user.rpc_id(multiplayer.multiplayer_peer.get_instance_id(),
-		name, email, password, _generate_avatar_color(name))
+		Network.create_user(
+		user_name, email, password, _generate_avatar_color(user_name))
 		return
 
-	request_authenticate_user.rpc_id(multiplayer.multiplayer_peer.get_instance_id(), email, password)
+	Network.login_user(email, password)
 
 func _on_toggle_mode_button_pressed() -> void:
 	create_mode = not create_mode
 	_sync_ui_mode()
 
-@rpc("any_peer", "call_remote", "reliable")
-func request_create_user(
-	_username: String,
-	_email: String,
-	_password: String,
-	_color: String
-) -> void:
-	pass
-	
-@rpc("any_peer", "call_remote", "reliable")
-func request_authenticate_user(
-	_email: String,
-	_password: String
-) -> void:
-	pass
-
-@rpc("authority", "call_remote", "reliable")
-func send_user_data(user_data: Dictionary) -> void:
-	_set_status("User logged in", OK_COLOR)
-	name_edit.clear()
-	email_edit.clear()
-	password_edit.clear()
-
-@rpc("authority", "call_remote", "reliable")
-func send_user_creation_failed(message: String) -> void:
+func _on_user_creation_failed(message: String) -> void:
 	_set_status(message, ERROR_COLOR)
-	
-@rpc("authority", "call_remote", "reliable")
-func send_user_authentication_failed(message: String) -> void:
+
+func _on_login_successful(user_data: Dictionary) -> void:
+	_set_status("User logged in: %s" % user_data.get("name", ""), OK_COLOR)
+
+func _on_login_failed(message: String) -> void:
 	_set_status(message, ERROR_COLOR)

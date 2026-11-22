@@ -38,25 +38,81 @@ func request_create_user(
 			"User %s with mail %s could not be created." % [username, email]
 		)
 	else:
-		send_user_data.rpc_id(sender_id, user_data)
+		send_login_successful.rpc_id(sender_id, user_data)
 
 @rpc("any_peer", "call_remote", "reliable")
 func request_login_user(email: String, password: String) -> void:
 	var sender_id := multiplayer.get_remote_sender_id()
-	var repository: UserRepository = get_tree().root.get_node("ServerMain/UserRepository")
+	var repository: UserRepository = get_tree().root \
+		.get_node("ServerMain/UserRepository")
 
-	var user_data: Dictionary = repository.login_user(email, password)
+	var user: Dictionary = repository.authenticate_user(email, password)
 
-	if user_data.is_empty():
-		send_user_authentication_failed.rpc_id(
+	if user.is_empty():
+		send_login_failed.rpc_id(
 			sender_id,
-			"User %s could not be logged in." % email
+            "E-Mail oder Passwort ist ungültig."
 		)
-	else:
-		send_user_data.rpc_id(sender_id, user_data)
+		return
+
+	var session: Dictionary = get_tree().root \
+		.get_node("ServerMain/SessionManager") \
+		.create_session(int(user["id"]))
+
+	send_login_successful.rpc_id(
+		sender_id,
+		{
+			"user": user,
+			"token": session["token"],
+			"expires_at": session["expires_at"]
+		}
+	)
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_protected_data(token: String) -> void:
+	var sender_id := multiplayer.get_remote_sender_id()
+	var session_manager: SessionManager = get_tree().root \
+		.get_node("ServerMain/SessionManager")
+
+	var session: Dictionary = session_manager.validate_token(token)
+
+	if session.is_empty():
+		send_authentication_required.rpc_id(sender_id)
+		return
+
+	var repository: UserRepository = get_tree().root \
+		.get_node("ServerMain/UserRepository")
+
+	var user_data: Dictionary = repository.get_user_by_id(
+		int(session["user_id"])
+	)
+
+	send_protected_data.rpc_id(sender_id, user_data)
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_logout(token: String) -> void:
+	var sender_id := multiplayer.get_remote_sender_id()
+	var session_manager: SessionManager = get_tree().root \
+		.get_node("ServerMain/SessionManager")
+
+	session_manager.revoke_token(token)
+
+	send_logout_successful.rpc_id(sender_id)
 
 @rpc("authority", "call_remote", "reliable")
-func send_user_data(user_data: Dictionary) -> void:
+func send_logout_successful() -> void:
+	pass
+
+@rpc("authority", "call_remote", "reliable")
+func send_authentication_required() -> void:
+	pass
+
+@rpc("authority", "call_remote", "reliable")
+func send_protected_data(user_data: Dictionary) -> void:
+	pass
+
+@rpc("authority", "call_remote", "reliable")
+func send_login_successful(user_data: Dictionary) -> void:
 	login_successful.emit(user_data)
 
 @rpc("authority", "call_remote", "reliable")
@@ -64,5 +120,5 @@ func send_user_creation_failed(message: String) -> void:
 	user_creation_failed.emit(message)
 
 @rpc("authority", "call_remote", "reliable")
-func send_user_authentication_failed(message: String) -> void:
+func send_login_failed(message: String) -> void:
 	login_failed.emit(message)

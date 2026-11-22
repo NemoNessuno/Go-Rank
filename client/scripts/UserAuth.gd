@@ -1,6 +1,7 @@
 extends Control
 
 var create_mode := true
+var token_store: TokenStore
 
 const SERVER_ADDRESS := "127.0.0.1"
 const SERVER_PORT := 7000
@@ -17,8 +18,11 @@ const ERROR_COLOR := Color(1.0, 0.35, 0.35, 1.0)
 @onready var submit_button: Button = $PanelContainer/MarginContainer/VBoxContainer/SubmitButton
 @onready var toggle_button: Button = $PanelContainer/MarginContainer/VBoxContainer/ToggleModeButton
 @onready var status_label: Label = $PanelContainer/MarginContainer/VBoxContainer/StatusLabel
+@onready var remember_checkbox : CheckBox = $PanelContainer/MarginContainer/VBoxContainer/RememberMeCheckBox
 
 func _ready() -> void:
+	token_store = TokenStore.new()
+	
 	Network.user_creation_failed.connect(_on_user_creation_failed)
 	Network.login_successful.connect(_on_login_successful)
 	Network.login_failed.connect(_on_login_failed)
@@ -36,6 +40,35 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(func(): _set_status("Disonnected from server.", SIGNAL_COLOR))
 	
 	_sync_ui_mode()
+
+func _on_connected_to_server() -> void:
+	_set_status("Connected to server.", OK_COLOR)
+
+	var session := token_store.load_session()
+
+	if not session.is_empty():
+		Network.request_protected_data.rpc_id(
+			1,
+			session["token"]
+		)
+	else:
+		_set_status("Bitte anmelden.", NEUTRAL_COLOR)
+
+func _on_login_successful(response: Dictionary) -> void:
+	var user: Dictionary = response["user"]
+	var token: String = response["token"]
+	var expires_at: int = int(response["expires_at"])
+
+	if remember_checkbox.button_pressed:
+		token_store.save_session(
+			token,
+			String(user["email"]),
+			expires_at
+		)
+	else:
+		token_store.clear_session()
+
+	_set_status("Login erfolgreich.", OK_COLOR)
 
 func _sync_ui_mode() -> void:
 	name_edit.visible = create_mode
@@ -88,9 +121,6 @@ func _on_toggle_mode_button_pressed() -> void:
 
 func _on_user_creation_failed(message: String) -> void:
 	_set_status(message, ERROR_COLOR)
-
-func _on_login_successful(user_data: Dictionary) -> void:
-	_set_status("User logged in: %s" % user_data.get("name", ""), OK_COLOR)
 
 func _on_login_failed(message: String) -> void:
 	_set_status(message, ERROR_COLOR)

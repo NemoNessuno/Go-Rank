@@ -69,11 +69,25 @@ static func _initialize_tables(db: SQLite) -> bool:
 		"""
 	):
 		return false
+		
+	if not _execute_sql(db, 
+		"""
+		CREATE TABLE IF NOT EXISTS sessions (
+			token TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL,
+			created_at INTEGER NOT NULL,
+			expires_at INTEGER NOT NULL,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+			);
+		"""
+	):
+			return false
 
 	if not (_execute_sql(db, "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);") 
 		and _execute_sql(db, "CREATE INDEX IF NOT EXISTS idx_games_white_player ON games(white_player_id);")
 		and _execute_sql(db, "CREATE INDEX IF NOT EXISTS idx_games_black_player ON games(black_player_id);")
-	):
+		and _execute_sql(db, "CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);")
+		):
 		return false
 		
 	return true

@@ -62,9 +62,14 @@ text = "Create account"
 layout_mode = 2
 text = "Already have an account? Log in"
 
+[node name="RememberMeCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1217786189]
+layout_mode = 2
+text = "Remember me"
+
 [node name="StatusLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=265657661]
 layout_mode = 2
 text = "Create a new account to play."
+horizontal_alignment = 1
 autowrap_mode = 3
 
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/SubmitButton" to="." method="_on_submit_button_pressed"]

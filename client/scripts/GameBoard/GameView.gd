@@ -1,3 +1,4 @@
+class_name GameView
 extends Control
 
 const GameBoardStateScript = preload("res://client/scripts/GameBoard/GameBoardState.gd")

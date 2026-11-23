@@ -132,7 +132,7 @@ func _on_start_game_pressed() -> void:
 	game.black_player = Network.current_user
 	game.white_player = selected_user
 	Network.current_game = game
-	get_tree().change_scene_to_file("res://client/scenes/GameBoard.tscn")
+	get_tree().change_scene_to_file("res://client/scenes/GameView.tscn")
 
 func _on_logout_pressed() -> void:
 	if not Network.logout():

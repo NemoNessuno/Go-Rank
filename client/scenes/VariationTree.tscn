@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[node name="VariationTree" type="PanelContainer"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VariationVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VariationTitle" type="Label" parent="VariationVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Variations"
+
+[node name="VariationGraph" type="GraphEdit" parent="VariationVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+show_grid = false
+connection_lines_thickness = 1.0
+minimap_enabled = false
+show_menu = false

@@ -1,16 +1,17 @@
 [gd_scene format=3 uid="uid://cc70rmbdd68f"]
 
-[ext_resource type="Script" uid="uid://ceg506ax30lv1" path="res://client/scripts/GameBoard/GameBoard.gd" id="1_2cygc"]
-[ext_resource type="Script" uid="uid://crondkbb4hva0" path="res://client/scripts/GameBoard/BoardSurface.gd" id="2_1aotv"]
+[ext_resource type="Script" uid="uid://ceg506ax30lv1" path="res://client/scripts/GameBoard/GameView.gd" id="1_game_view"]
+[ext_resource type="PackedScene" path="res://client/scenes/GoBoard.tscn" id="2_go_board"]
+[ext_resource type="PackedScene" path="res://client/scenes/VariationTree.tscn" id="3_variation_tree"]
 
-[node name="GameBoard" type="Control" unique_id=1073299362]
+[node name="GameView" type="Control" unique_id=1073299362]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_2cygc")
+script = ExtResource("1_game_view")
 
 [node name="RootVBox" type="VBoxContainer" parent="." unique_id=1058842634]
 layout_mode = 1
@@ -124,33 +125,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="BoardSurface" type="Control" parent="RootVBox/MainHBox/BoardPanel" unique_id=467932961]
-custom_minimum_size = Vector2(520, 520)
+[node name="GoBoard" parent="RootVBox/MainHBox/BoardPanel" instance=ExtResource("2_go_board")]
 layout_mode = 2
-mouse_filter = 2
-script = ExtResource("2_1aotv")
 
-[node name="VariationPanel" type="PanelContainer" parent="RootVBox/MainHBox" unique_id=423793110]
-custom_minimum_size = Vector2(260, 0)
+[node name="VariationTree" parent="RootVBox/MainHBox" instance=ExtResource("3_variation_tree")]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="VariationVBox" type="VBoxContainer" parent="RootVBox/MainHBox/VariationPanel" unique_id=649161586]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="VariationTitle" type="Label" parent="RootVBox/MainHBox/VariationPanel/VariationVBox" unique_id=629090929]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Variations"
-
-[node name="VariationTree" type="GraphEdit" parent="RootVBox/MainHBox/VariationPanel/VariationVBox" unique_id=855145381]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-show_grid = false
-connection_lines_thickness = 1.0
-minimap_enabled = false
-show_menu = false

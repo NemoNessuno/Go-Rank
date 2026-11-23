@@ -9,7 +9,9 @@ func attach(board_owner: Control, surface_owner: Control = null) -> void:
 	surface = surface_owner if surface_owner != null else board_owner
 
 func build_ui() -> void:
-	owner.variation_tree = owner.get_node_or_null("RootVBox/MainHBox/VariationPanel/VariationVBox/VariationTree") as GraphEdit
+	owner.variation_tree = owner.get_node_or_null(
+		"RootVBox/MainHBox/VariationTree/VariationVBox/VariationGraph"
+	) as GraphEdit
 	owner.status_label = owner.get_node_or_null("RootVBox/MainHBox/LeftPanel/StatusLabel") as Label
 	owner.black_player_label = owner.get_node_or_null("RootVBox/MainHBox/LeftPanel/BlackPlayerLabel") as Label
 	owner.white_player_label = owner.get_node_or_null("RootVBox/MainHBox/LeftPanel/WhitePlayerLabel") as Label
@@ -22,7 +24,9 @@ func build_ui() -> void:
 	owner.pass_button = owner.get_node_or_null("RootVBox/Header/PassButton") as Button
 	owner.store_game_button = owner.get_node_or_null("RootVBox/Header/StoreGameButton") as Button
 	owner.load_sgf_button = owner.get_node_or_null("RootVBox/Header/LoadSgfButton") as Button
-	owner.board_surface = owner.get_node_or_null("RootVBox/MainHBox/BoardPanel/BoardSurface") as Control
+	owner.board_surface = owner.get_node_or_null(
+		"RootVBox/MainHBox/BoardPanel/GoBoard"
+	) as Control
 
 	owner.back_button.pressed.connect(owner._on_back_to_overworld_pressed)
 	owner.restart_button.pressed.connect(owner._on_restart_pressed)

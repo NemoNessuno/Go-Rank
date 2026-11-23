@@ -1,7 +1,7 @@
 class_name GameBoardIdentityTests
 extends GdUnitTestSuite
 
-const GameBoardScene := preload("res://client/scenes/GameBoard.tscn")
+const GameViewScene := preload("res://client/scenes/GameView.tscn")
 
 var _game_board: Control
 var _saved_sgf_path := ""
@@ -31,10 +31,17 @@ func _create_game() -> GameData:
 
 func test_board_displays_names_ranks_and_undecided_result() -> void:
 	Network.current_game = _create_game()
-	_game_board = GameBoardScene.instantiate()
+	_game_board = GameViewScene.instantiate()
 	add_child(_game_board)
 	await get_tree().process_frame
 
+	assert_str(_game_board.name).is_equal("GameView")
+	assert_str(
+		_game_board.get_node("RootVBox/MainHBox/BoardPanel/GoBoard").scene_file_path
+	).is_equal("res://client/scenes/GoBoard.tscn")
+	assert_str(
+		_game_board.get_node("RootVBox/MainHBox/VariationTree").scene_file_path
+	).is_equal("res://client/scenes/VariationTree.tscn")
 	assert_str(_game_board.black_player_label.text).is_equal("Black Player (30 kyu)")
 	assert_str(_game_board.white_player_label.text).is_equal("White Player (27 kyu)")
 	assert_str(_game_board.status_label.text).is_equal("Black Player to move")
@@ -42,7 +49,7 @@ func test_board_displays_names_ranks_and_undecided_result() -> void:
 
 func test_game_store_sgf_uses_timestamp_and_player_names() -> void:
 	Network.current_game = _create_game()
-	_game_board = GameBoardScene.instantiate()
+	_game_board = GameViewScene.instantiate()
 	add_child(_game_board)
 	await get_tree().process_frame
 

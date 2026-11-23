@@ -1,23 +1,24 @@
 extends Control
 
 const RatingSystemScript := preload("res://server/RatingSystem.gd")
+const UserButtonScene := preload("res://client/scenes/UserButton.tscn")
 
-@onready var map_panel: Panel = $MapPanel
-@onready var sidebar: Panel = $Sidebar
+@onready var world_container: GridContainer = $MapPanel/WorldContainer
+@onready var status_label: Label = $Sidebar/SidebarContent/StatusLabel
+@onready var selected_user_label: Label = $Sidebar/SidebarContent/SelectedUserLabel
+@onready var unified_rating_label: Label = $Sidebar/SidebarContent/UnifiedRatingLabel
+@onready var start_game_button: Button = $Sidebar/SidebarContent/StartGameButton
+@onready var profile_button: Button = $Sidebar/SidebarContent/ProfileButton
+@onready var logout_button: Button = $Sidebar/SidebarContent/LogoutButton
 
 var users: Array[UserData] = []
 var selected_user: UserData
 var user_buttons: Array[Button] = []
-var status_label: Label
-var selected_user_label: Label
-var unified_rating_label: Label
-var start_game_button: Button
-var profile_button: Button
-var logout_button: Button
 
 func _ready() -> void:
-	_build_sidebar()
-	_ensure_world_container()
+	profile_button.pressed.connect(_on_profile_pressed)
+	start_game_button.pressed.connect(_on_start_game_pressed)
+	logout_button.pressed.connect(_on_logout_pressed)
 	Network.users_received.connect(_on_users_received)
 	Network.users_request_failed.connect(_on_users_request_failed)
 	Network.profile_ratings_received.connect(_on_profile_ratings_received)
@@ -59,71 +60,6 @@ func _update_unified_rating_label(profile: Dictionary) -> void:
 func _on_profile_pressed() -> void:
 	get_tree().change_scene_to_file("res://client/scenes/UserProfile.tscn")
 
-func _build_sidebar() -> void:
-	var content := VBoxContainer.new()
-	content.name = "SidebarContent"
-	content.position = Vector2(18, 18)
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 12)
-	sidebar.add_child(content)
-
-	var title := Label.new()
-	title.text = "Go Academy"
-	title.add_theme_font_size_override("font_size", 28)
-	title.modulate = Color(1.0, 0.8, 0.4)
-	content.add_child(title)
-
-	var subtitle := Label.new()
-	subtitle.text = "Choose an opponent"
-	subtitle.add_theme_font_size_override("font_size", 18)
-	content.add_child(subtitle)
-
-	unified_rating_label = Label.new()
-	unified_rating_label.text = "Unified rating: Loading..."
-	content.add_child(unified_rating_label)
-
-	profile_button = Button.new()
-	profile_button.text = "View profile"
-	profile_button.pressed.connect(_on_profile_pressed)
-	profile_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_child(profile_button)
-
-	status_label = Label.new()
-	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(status_label)
-
-	selected_user_label = Label.new()
-	selected_user_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	selected_user_label.custom_minimum_size = Vector2(200, 80)
-	selected_user_label.text = "Select a player to start a game."
-	content.add_child(selected_user_label)
-
-	start_game_button = Button.new()
-	start_game_button.text = "Open 9x9 Go board"
-	start_game_button.disabled = true
-	start_game_button.pressed.connect(_on_start_game_pressed)
-	start_game_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_child(start_game_button)
-
-	logout_button = Button.new()
-	logout_button.text = "Log out"
-	logout_button.pressed.connect(_on_logout_pressed)
-	logout_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_child(logout_button)
-
-func _ensure_world_container() -> Control:
-	var existing := map_panel.get_node_or_null("WorldContainer")
-	if existing != null:
-		return existing
-
-	var container := Control.new()
-	container.name = "WorldContainer"
-	container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	container.mouse_filter = Control.MOUSE_FILTER_PASS
-	map_panel.add_child(container)
-	return container
-
 func _on_users_received(user_data_list: Array) -> void:
 	users.clear()
 	for user_data in user_data_list:
@@ -142,7 +78,6 @@ func _on_users_received(user_data_list: Array) -> void:
 	_update_selected_user()
 
 func _render_users() -> void:
-	var world_container := _ensure_world_container()
 	for button in user_buttons:
 		if is_instance_valid(button):
 			button.queue_free()
@@ -150,35 +85,21 @@ func _render_users() -> void:
 
 	for index in range(users.size()):
 		var user := users[index]
-		var button := Button.new()
+		var button := UserButtonScene.instantiate() as Button
 		button.name = "UserButton_%d" % user.id
-		button.custom_minimum_size = Vector2(170, 60)
-		button.position = Vector2(30 + (index % 3) * 190, 30 + (index / 3) * 90)
-		button.size = Vector2(170, 70)
-		button.focus_mode = Control.FOCUS_NONE
-		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		button.text = user.name
-		button.add_theme_font_size_override("font_size", 16)
 		button.pressed.connect(_on_user_button_pressed.bind(index))
-
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(user.avatar.color) if user.avatar != null else Color("#4ec9f5")
-		style.corner_radius_top_left = 20
-		style.corner_radius_top_right = 20
-		style.corner_radius_bottom_left = 20
-		style.corner_radius_bottom_right = 20
-		style.border_color = Color(1, 1, 1, 0.35)
-		style.set_border_width_all(2)
-		if user == selected_user:
-			style.border_color = Color(1, 0.88, 0.2, 1)
-			style.set_border_width_all(3)
-		button.add_theme_stylebox_override("normal", style)
-		button.add_theme_stylebox_override("hover", style)
-		button.add_theme_stylebox_override("pressed", style)
-		button.add_theme_stylebox_override("focus", style)
-
+		_apply_user_button_style(button, user == selected_user, user)
 		world_container.add_child(button)
 		user_buttons.append(button)
+
+func _apply_user_button_style(button: Button, is_selected: bool, user: UserData) -> void:
+	var style := button.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+	style.bg_color = Color(user.avatar.color) if user.avatar != null else Color("#4ec9f5")
+	style.border_color = Color(1, 0.88, 0.2, 1) if is_selected else Color(1, 1, 1, 0.35)
+	style.set_border_width_all(3 if is_selected else 2)
+	for state in ["normal", "hover", "pressed", "focus"]:
+		button.add_theme_stylebox_override(state, style)
 
 func _on_user_button_pressed(index: int) -> void:
 	if index < 0 or index >= users.size():

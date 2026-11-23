@@ -29,6 +29,22 @@ anchor_right = 0.72
 anchor_bottom = 0.94
 grow_vertical = 2
 
+[node name="WorldContainer" type="GridContainer" parent="MapPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+columns = 3
+mouse_filter = 1
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+
 [node name="Sidebar" type="Panel" parent="." unique_id=1519759917]
 layout_mode = 1
 anchors_preset = -1
@@ -38,3 +54,57 @@ anchor_right = 0.96
 anchor_bottom = 0.94
 grow_horizontal = 0
 grow_vertical = 2
+
+[node name="SidebarContent" type="VBoxContainer" parent="Sidebar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Sidebar/SidebarContent"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Go Academy"
+modulate = Color(1, 0.8, 0.4, 1)
+
+[node name="SubtitleLabel" type="Label" parent="Sidebar/SidebarContent"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Choose an opponent"
+
+[node name="UnifiedRatingLabel" type="Label" parent="Sidebar/SidebarContent"]
+layout_mode = 2
+text = "Unified rating: Loading..."
+
+[node name="ProfileButton" type="Button" parent="Sidebar/SidebarContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "View profile"
+
+[node name="StatusLabel" type="Label" parent="Sidebar/SidebarContent"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="SelectedUserLabel" type="Label" parent="Sidebar/SidebarContent"]
+custom_minimum_size = Vector2(200, 80)
+layout_mode = 2
+text = "Select a player to start a game."
+autowrap_mode = 3
+
+[node name="StartGameButton" type="Button" parent="Sidebar/SidebarContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Open 9x9 Go board"
+
+[node name="LogoutButton" type="Button" parent="Sidebar/SidebarContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Log out"

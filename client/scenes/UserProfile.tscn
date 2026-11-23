@@ -1,6 +1,27 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://client/scripts/UserProfile.gd" id="1_profile"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_profile"]
+bg_color = Color(0.14902, 0.231373, 0.341176, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_avatar"]
+bg_color = Color(0.305882, 0.788235, 0.960784, 1)
+corner_radius_top_left = 110
+corner_radius_top_right = 110
+corner_radius_bottom_right = 110
+corner_radius_bottom_left = 110
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ratings"]
+bg_color = Color(0.109804, 0.180392, 0.278431, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="UserProfile" type="Control"]
 layout_mode = 3
@@ -10,3 +31,182 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_profile")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.109804, 0.180392, 0.278431, 1)
+
+[node name="ProfilePanel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -560.0
+offset_top = -330.0
+offset_right = 560.0
+offset_bottom = 330.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_profile")
+
+[node name="MarginContainer" type="MarginContainer" parent="ProfilePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="ProfilePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Header" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="Button" parent="ProfilePanel/MarginContainer/Layout/Header"]
+layout_mode = 2
+text = "Back"
+
+[node name="TitleLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Player profile"
+modulate = Color(1, 0.8, 0.4, 1)
+
+[node name="Content" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 48
+
+[node name="Identity" type="VBoxContainer" parent="ProfilePanel/MarginContainer/Layout/Content"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 18
+
+[node name="AvatarCenter" type="CenterContainer" parent="ProfilePanel/MarginContainer/Layout/Content/Identity"]
+layout_mode = 2
+
+[node name="AvatarPanel" type="PanelContainer" parent="ProfilePanel/MarginContainer/Layout/Content/Identity/AvatarCenter"]
+custom_minimum_size = Vector2(220, 220)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_avatar")
+
+[node name="AvatarInitial" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/Identity/AvatarCenter/AvatarPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 88
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UsernameLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/Identity"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Player"
+horizontal_alignment = 1
+
+[node name="RatingsPanel" type="PanelContainer" parent="ProfilePanel/MarginContainer/Layout/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_ratings")
+
+[node name="RatingsMargin" type="MarginContainer" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 20
+
+[node name="RatingsLayout" type="VBoxContainer" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RatingsTitle" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Current ratings"
+
+[node name="WeightingNote" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout"]
+layout_mode = 2
+text = "Unified rating weights each category by rated games played."
+autowrap_mode = 3
+
+[node name="RatingsContainer" type="VBoxContainer" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Rating9x9" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CategoryLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/Rating9x9"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "9x9"
+
+[node name="RatingLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/Rating9x9"]
+layout_mode = 2
+text = "30 kyu (525.0)\n0 rated games"
+horizontal_alignment = 2
+
+[node name="Rating13x13" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CategoryLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/Rating13x13"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "13x13"
+
+[node name="RatingLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/Rating13x13"]
+layout_mode = 2
+text = "30 kyu (525.0)\n0 rated games"
+horizontal_alignment = 2
+
+[node name="Rating19x19" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CategoryLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/Rating19x19"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "19x19"
+
+[node name="RatingLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/Rating19x19"]
+layout_mode = 2
+text = "30 kyu (525.0)\n0 rated games"
+horizontal_alignment = 2
+
+[node name="RatingTsumeGo" type="HBoxContainer" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CategoryLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/RatingTsumeGo"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Tsume-go"
+
+[node name="RatingLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout/RatingsContainer/RatingTsumeGo"]
+layout_mode = 2
+text = "30 kyu (525.0)\n0 rated games"
+horizontal_alignment = 2
+
+[node name="StatusLabel" type="Label" parent="ProfilePanel/MarginContainer/Layout/Content/RatingsPanel/RatingsMargin/RatingsLayout"]
+layout_mode = 2
+modulate = Color(0.941176, 0.776471, 0.454902, 1)
+autowrap_mode = 3

@@ -54,7 +54,7 @@ func play_move(x: int, y: int) -> Dictionary:
 	owner.previous_board_state = board_before_move
 	owner.current_player = owner._opponent(owner.current_player)
 	owner._push_history_state()
-	owner._update_status("%s to move" % (["Black", "White"][owner.current_player - 1]))
+	owner._update_status("%s to move" % _player_name(owner.current_player))
 	owner._refresh_capture_labels()
 	owner.queue_redraw()
 	return move_data
@@ -87,8 +87,15 @@ func pass_turn() -> Dictionary:
 	if owner.state.consecutive_passes >= 2:
 		owner._end_game()
 		return move_data
-	owner._update_status("%s to move after a pass" % (["Black", "White"][owner.current_player - 1]))
+	owner._update_status(
+		"%s to move after a pass" % _player_name(owner.current_player)
+	)
 	owner._refresh_capture_labels()
 	owner._refresh_final_score_label()
 	owner.queue_redraw()
 	return move_data
+
+func _player_name(color: int) -> String:
+	if owner.has_method("_player_name"):
+		return owner._player_name(color)
+	return "Black" if color == owner.BLACK else "White"

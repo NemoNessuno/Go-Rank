@@ -157,7 +157,10 @@ func select_node(node_id: int) -> void:
 	for row in node.get("previous_board_state", []):
 		owner.previous_board_state.append(row.duplicate())
 	owner.active_variation_id = node_id
-	owner._update_status("%s to move" % (["Black", "White"][owner.current_player - 1]))
+	var player_name := "Black" if owner.current_player == owner.BLACK else "White"
+	if owner.has_method("_player_name"):
+		player_name = owner._player_name(owner.current_player)
+	owner._update_status("%s to move" % player_name)
 	owner._refresh_capture_labels()
 	refresh_tree()
 	owner.queue_redraw()

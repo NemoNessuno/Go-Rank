@@ -39,7 +39,7 @@ size_flags_horizontal = 3
 
 [node name="BackButton" type="Button" parent="RootVBox/Header" unique_id=614825434]
 layout_mode = 2
-text = "Back to academy"
+text = "Back to Overworld"
 
 [node name="RestartButton" type="Button" parent="RootVBox/Header" unique_id=90988116]
 layout_mode = 2
@@ -49,9 +49,9 @@ text = "Restart"
 layout_mode = 2
 text = "Pass"
 
-[node name="SaveSgfButton" type="Button" parent="RootVBox/Header" unique_id=1891851462]
+[node name="StoreGameButton" type="Button" parent="RootVBox/Header" unique_id=1891851462]
 layout_mode = 2
-text = "Save SGF"
+text = "Store game"
 
 [node name="LoadSgfButton" type="Button" parent="RootVBox/Header" unique_id=535899653]
 layout_mode = 2
@@ -74,6 +74,16 @@ theme_override_constants/separation = 10
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Black to move"
+
+[node name="BlackPlayerLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Black"
+
+[node name="WhitePlayerLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "White"
 
 [node name="BlackCapturesLabel" type="Label" parent="RootVBox/MainHBox/LeftPanel" unique_id=853785169]
 layout_mode = 2

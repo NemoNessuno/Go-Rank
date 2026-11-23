@@ -6,6 +6,7 @@ const GameBoardRulesScript = preload("res://client/scripts/GameBoard/GameBoardRu
 const GameBoardFileManagerScript = preload("res://client/scripts/GameBoard/GameBoardFileManager.gd")
 const GameBoardVariationTreeScript = preload("res://client/scripts/GameBoard/GameBoardVariationTree.gd")
 const GameBoardScoringScript = preload("res://client/scripts/GameBoard/GameBoardScoring.gd")
+const RatingSystemScript = preload("res://server/scripts/ratings/RatingSystem.gd")
 
 const BOARD_SIZE := GameBoardStateScript.BOARD_SIZE
 const EMPTY := GameBoardStateScript.EMPTY
@@ -68,15 +69,17 @@ var board_rect: Rect2:
 	set(value):
 		state.board_rect = value
 var status_label: Label
+var black_player_label: Label
+var white_player_label: Label
 var black_captures_label: Label
 var white_captures_label: Label
 var final_score_label: Label
 var komi_input: LineEdit
 var komi_value: float = 6.0
+var is_storing_game := false
 var pass_button: Button
-var save_sgf_button: Button
+var store_game_button: Button
 var load_sgf_button: Button
-var save_dialog: FileDialog
 var load_dialog: FileDialog
 var back_button: Button
 var restart_button: Button
@@ -128,6 +131,9 @@ func _ready() -> void:
 	variation_manager.attach(self)
 	scoring_manager = GameBoardScoringScript.new()
 	_build_ui()
+	Network.game_store_successful.connect(_on_game_store_successful)
+	Network.game_store_failed.connect(_on_game_store_failed)
+	_refresh_player_labels()
 	if board_surface != null and board_surface.has_method("set"):
 		board_surface.set("board_owner", self)
 	_reset_board()
@@ -144,7 +150,7 @@ func _build_file_dialogs() -> void:
 func _reset_board() -> void:
 	territory_dots.clear()
 	state.reset_board()
-	_update_status("Black to move")
+	_update_status("%s to move" % _player_name(BLACK))
 	_refresh_capture_labels()
 	_refresh_final_score_label()
 	if board_surface != null:
@@ -217,10 +223,14 @@ func _on_pass_pressed() -> void:
 	variation_manager.record_move(move_data)
 
 func _on_restart_pressed() -> void:
+	if Network.current_game != null:
+		Network.current_game.id = 0
+		Network.current_game.result = GameData.RESULT_UNDECIDED
+	file_manager.last_saved_path = ""
 	_reset_board()
 
 func _on_back_to_overworld_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/Overworld.tscn")
+	get_tree().change_scene_to_file("res://client/scenes/Overworld.tscn")
 
 func _push_history_state() -> void:
 	state.push_history_state()
@@ -232,7 +242,7 @@ func _restore_state(state_data: Dictionary) -> void:
 		_update_status("Game over")
 	else:
 		territory_dots.clear()
-		_update_status("%s to move" % (["Black", "White"][current_player - 1]))
+		_update_status("%s to move" % _player_name(current_player))
 
 	_refresh_capture_labels()
 	_refresh_final_score_label()
@@ -244,9 +254,15 @@ func _update_status(message: String) -> void:
 
 func _refresh_capture_labels() -> void:
 	if black_captures_label != null:
-		black_captures_label.text = "Black captures: %d" % black_captures
+		black_captures_label.text = "%s captures: %d" % [
+			_player_name(BLACK),
+			black_captures
+		]
 	if white_captures_label != null:
-		white_captures_label.text = "White captures: %d" % white_captures
+		white_captures_label.text = "%s captures: %d" % [
+			_player_name(WHITE),
+			white_captures
+		]
 
 func _refresh_final_score_label() -> void:
 	if final_score_label == null:
@@ -256,7 +272,12 @@ func _refresh_final_score_label() -> void:
 		final_score_label.text = ""
 		return
 	var score := _calculate_final_score()
-	final_score_label.text = "Final score: Black %s - White %s" % [_format_score_value(score["black"]), _format_score_value(score["white"])]
+	final_score_label.text = "Final score: %s %s - %s %s" % [
+		_player_name(BLACK),
+		_format_score_value(score["black"]),
+		_player_name(WHITE),
+		_format_score_value(score["white"])
+	]
 	final_score_label.visible = true
 
 func _format_score_value(value: float) -> String:
@@ -298,9 +319,15 @@ func _end_game() -> void:
 	var black_total: int = score["black"]
 	var white_total: int = score["white"]
 	if black_total > white_total:
-		_update_status("Game over: Black wins by %d" % (black_total - white_total))
+		_update_status("Game over: %s wins by %d" % [
+			_player_name(BLACK),
+			black_total - white_total
+		])
 	elif white_total > black_total:
-		_update_status("Game over: White wins by %d" % (white_total - black_total))
+		_update_status("Game over: %s wins by %d" % [
+			_player_name(WHITE),
+			white_total - black_total
+		])
 	else:
 		_update_status("Game over: Draw")
 	_refresh_capture_labels()
@@ -313,17 +340,98 @@ func _refresh_territory_markers() -> void:
 func _calculate_final_score() -> Dictionary:
 	return scoring_manager.calculate_final_score(board, black_captures, white_captures, komi_value, territory_dots)
 
-func _save_sgf() -> void:
-	file_manager.save_sgf()
-
-func _on_save_dialog_file_selected(path: String) -> void:
-	file_manager._on_save_dialog_file_selected(path)
+func _store_game() -> void:
+	if is_storing_game:
+		return
+	if Network.current_game == null:
+		_update_status("No players are assigned to this game.")
+		return
+	var saved_path := file_manager.write_game_sgf()
+	if saved_path.is_empty():
+		return
+	var result := _get_game_result()
+	if not Network.store_game(result):
+		_update_status("SGF saved, but the game could not be sent to the server.")
+		return
+	is_storing_game = true
+	_set_game_storage_pending(true)
+	_update_status("SGF saved. Storing game...")
 
 func _load_sgf() -> void:
 	file_manager.load_sgf()
 
 func _on_load_dialog_file_selected(path: String) -> void:
 	file_manager._on_load_dialog_file_selected(path)
+	file_manager.last_saved_path = ""
+
+func _on_game_store_successful(response: Dictionary) -> void:
+	is_storing_game = false
+	_set_game_storage_pending(false)
+	_refresh_player_labels()
+	_refresh_capture_labels()
+	var stored_result := int(response.get("result", GameData.RESULT_UNDECIDED))
+	if stored_result == GameData.RESULT_UNDECIDED:
+		_update_status("Game stored as undecided. Store again after the game ends.")
+	else:
+		_update_status("Game and SGF stored successfully.")
+
+func _on_game_store_failed(message: String) -> void:
+	is_storing_game = false
+	_set_game_storage_pending(false)
+	_update_status("SGF saved, but the game was not stored: %s" % message)
+
+func _set_game_storage_pending(is_pending: bool) -> void:
+	if store_game_button != null:
+		store_game_button.disabled = is_pending
+	if restart_button != null:
+		restart_button.disabled = is_pending
+	if back_button != null:
+		back_button.disabled = is_pending
+
+func _get_game_result() -> int:
+	if (
+		not state.game_over
+		or Network.current_game == null
+		or Network.current_game.black_player == null
+		or Network.current_game.white_player == null
+	):
+		return GameData.RESULT_UNDECIDED
+	var score := _calculate_final_score()
+	if score["black"] > score["white"]:
+		return Network.current_game.black_player.id
+	if score["white"] > score["black"]:
+		return Network.current_game.white_player.id
+	return GameData.RESULT_DRAW
+
+func _refresh_player_labels() -> void:
+	if black_player_label != null:
+		black_player_label.text = _player_display_name(BLACK)
+	if white_player_label != null:
+		white_player_label.text = _player_display_name(WHITE)
+
+func _player_display_name(color: int) -> String:
+	var player := _player_data(color)
+	if player == null:
+		return "Black" if color == BLACK else "White"
+	return "%s (%s)" % [
+		_player_name(color),
+		RatingSystemScript.format_rank_label(player.unified_rating)
+	]
+
+func _player_name(color: int) -> String:
+	var player := _player_data(color)
+	if player == null or player.name.strip_edges().is_empty():
+		return "Black" if color == BLACK else "White"
+	return player.name
+
+func _player_data(color: int) -> UserData:
+	if Network.current_game == null:
+		return null
+	return (
+		Network.current_game.black_player
+		if color == BLACK
+		else Network.current_game.white_player
+	)
 
 func _snapshot_board() -> Array:
 	return state.snapshot_board()

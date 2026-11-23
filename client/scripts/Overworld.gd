@@ -128,6 +128,10 @@ func _on_start_game_pressed() -> void:
 		start_game_button.disabled = true
 		return
 
+	var game := GameData.new()
+	game.black_player = Network.current_user
+	game.white_player = selected_user
+	Network.current_game = game
 	get_tree().change_scene_to_file("res://client/scenes/GameBoard.tscn")
 
 func _on_logout_pressed() -> void:

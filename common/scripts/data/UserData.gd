@@ -6,6 +6,7 @@ var name: String = ""
 var email: String = ""
 var avatar: AvatarData
 var game_id: int = -1
+var unified_rating: float = 525.0
 
 func to_dictionary() -> Dictionary:
 	return {
@@ -14,6 +15,7 @@ func to_dictionary() -> Dictionary:
 		"email": email,
 		"avatar_id": avatar.id if avatar != null else 0,
 		"game_id": game_id,
+		"unified_rating": unified_rating,
 	}
 
 static func from_dictionary(data: Dictionary) -> UserData:
@@ -31,4 +33,5 @@ static func from_dictionary(data: Dictionary) -> UserData:
 		user.avatar.id = int(data.get("avatar_id", 0))
 		user.avatar.color = String(data.get("avatar_color", "#000000"))
 	user.game_id = int(data.get("game_id", -1))
+	user.unified_rating = float(data.get("unified_rating", 525.0))
 	return user

@@ -1,16 +1,13 @@
 class_name GameBoardFileManager
 extends RefCounted
 
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
+
 var owner: Control
+var last_saved_path := ""
 
 func attach(board_owner: Control) -> void:
 	owner = board_owner
-
-func save_sgf() -> void:
-	if owner.save_dialog == null:
-		_save_sgf_to_path("user://game.sgf")
-		return
-	owner.save_dialog.popup_centered()
 
 func load_sgf() -> void:
 	if owner.load_dialog == null:
@@ -18,11 +15,58 @@ func load_sgf() -> void:
 		return
 	owner.load_dialog.popup_centered()
 
-func _on_save_dialog_file_selected(path: String) -> void:
-	_save_sgf_to_path(path)
+func write_game_sgf() -> String:
+	var black := _player_name(GameBoardState.BLACK)
+	var white := _player_name(GameBoardState.WHITE)
+	if last_saved_path.is_empty():
+		var timestamp := "%d_%d" % [
+			int(Time.get_unix_time_from_system()),
+			Time.get_ticks_usec()
+		]
+		last_saved_path = "user://%s_%s_%s.sgf" % [
+			timestamp,
+			_sanitize_filename_component(black),
+			_sanitize_filename_component(white)
+		]
 
-func _save_sgf_to_path(path: String) -> void:
-	var output := "(;GM[1]FF[4]SZ[9]\n"
+	var output := "(;GM[1]FF[4]SZ[9]PB[%s]PW[%s]" % [
+		_escape_sgf_value(black),
+		_escape_sgf_value(white)
+	]
+	var black_player: UserData = owner._player_data(GameBoardState.BLACK)
+	var white_player: UserData = owner._player_data(GameBoardState.WHITE)
+	if black_player != null:
+		output += "BR[%s]" % RatingSystemScript.format_rank_label(
+			black_player.unified_rating
+		)
+	if white_player != null:
+		output += "WR[%s]" % RatingSystemScript.format_rank_label(
+			white_player.unified_rating
+		)
+	if owner.state.game_over:
+		var result: int = owner._get_game_result()
+		if result == GameData.RESULT_DRAW:
+			output += "RE[0]"
+		elif result == GameData.RESULT_UNDECIDED:
+			output += "RE[?]"
+		elif (
+			black_player != null
+			and result == black_player.id
+		):
+			var score: Dictionary = owner._calculate_final_score()
+			output += "RE[B+%s]" % owner._format_score_value(
+				abs(score["black"] - score["white"])
+			)
+		elif white_player != null and result == white_player.id:
+			var score: Dictionary = owner._calculate_final_score()
+			output += "RE[W+%s]" % owner._format_score_value(
+				abs(score["black"] - score["white"])
+			)
+		else:
+			output += "RE[?]"
+	else:
+		output += "RE[?]"
+	output += "\n"
 	for move in owner.move_log:
 		var color_prefix := "B" if move["color"] == owner.BLACK else "W"
 		var coordinate := ""
@@ -33,12 +77,29 @@ func _save_sgf_to_path(path: String) -> void:
 		output += ";%s[%s]\n" % [color_prefix, coordinate]
 	output += ")\n"
 
-	var file := FileAccess.open(path, FileAccess.WRITE)
+	var file := FileAccess.open(last_saved_path, FileAccess.WRITE)
 	if file == null:
-		owner._update_status("Could not save SGF file.")
-		return
+		owner._update_status("Could not save SGF file to %s." % last_saved_path)
+		return ""
 	file.store_string(output)
-	owner._update_status("Game saved to SGF.")
+	return last_saved_path
+
+func _player_name(color: int) -> String:
+	return owner._player_name(color)
+
+func _sanitize_filename_component(value: String) -> String:
+	var safe_value := value.strip_edges().to_ascii_buffer().get_string_from_ascii()
+	var pattern := RegEx.new()
+	pattern.compile("[^A-Za-z0-9_-]+")
+	safe_value = pattern.sub(safe_value, "_", true).strip_edges()
+	while safe_value.begins_with("_"):
+		safe_value = safe_value.substr(1)
+	while safe_value.ends_with("_"):
+		safe_value = safe_value.substr(0, safe_value.length() - 1)
+	return safe_value if not safe_value.is_empty() else "player"
+
+func _escape_sgf_value(value: String) -> String:
+	return value.replace("\\", "\\\\").replace("]", "\\]").replace("\r", " ").replace("\n", " ")
 
 func _on_load_dialog_file_selected(path: String) -> void:
 	_load_sgf_from_path(path)
@@ -65,6 +126,9 @@ func _load_sgf_from_path(path: String) -> void:
 			owner._on_pass_pressed()
 		else:
 			owner._play_move(move["x"], move["y"]) 
+	if Network.current_game != null:
+		Network.current_game.id = 0
+		Network.current_game.result = GameData.RESULT_UNDECIDED
 
 	owner._update_status("Loaded SGF game.")
 

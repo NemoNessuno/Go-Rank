@@ -75,6 +75,36 @@ static func record_9x9_game(
 	player_score: float,
 	timestamp: int = 0
 ) -> bool:
+	if db == null:
+		push_error("A database is required to record a 9x9 game.")
+		return false
+	if timestamp <= 0:
+		timestamp = int(Time.get_unix_time_from_system())
+	if not db.query("BEGIN IMMEDIATE;"):
+		push_error("Could not begin the 9x9 rating update transaction.")
+		return false
+	if not update_9x9_ratings_in_transaction(
+		db,
+		player_id,
+		opponent_id,
+		player_score,
+		timestamp
+	):
+		db.query("ROLLBACK;")
+		return false
+	if not db.query("COMMIT;"):
+		db.query("ROLLBACK;")
+		push_error("Could not commit the 9x9 rating update.")
+		return false
+	return true
+
+static func update_9x9_ratings_in_transaction(
+	db: SQLite,
+	player_id: int,
+	opponent_id: int,
+	player_score: float,
+	timestamp: int
+) -> bool:
 	if db == null or player_id <= 0 or opponent_id <= 0 or player_id == opponent_id:
 		push_error("A 9x9 rating update requires two distinct existing users.")
 		return false
@@ -84,20 +114,14 @@ static func record_9x9_game(
 	):
 		push_error("A 9x9 game score must be between 0 and 1.")
 		return false
-
 	if timestamp <= 0:
 		timestamp = int(Time.get_unix_time_from_system())
-	if not db.query("BEGIN IMMEDIATE;"):
-		push_error("Could not begin the 9x9 rating update transaction.")
-		return false
 
 	var player := get_9x9_rating(db, player_id)
 	var opponent := get_9x9_rating(db, opponent_id)
 	if player.is_empty() or opponent.is_empty():
-		db.query("ROLLBACK;")
 		push_error("Cannot update ratings for users without rating records.")
 		return false
-
 	var updated_player: Dictionary = RatingSystemScript.update_after_game(
 		player,
 		opponent,
@@ -111,18 +135,11 @@ static func record_9x9_game(
 		timestamp
 	)
 	if updated_player.is_empty() or updated_opponent.is_empty():
-		db.query("ROLLBACK;")
 		return false
 
 	if not _save_9x9_rating(db, player_id, updated_player):
-		db.query("ROLLBACK;")
 		return false
 	if not _save_9x9_rating(db, opponent_id, updated_opponent):
-		db.query("ROLLBACK;")
-		return false
-	if not db.query("COMMIT;"):
-		db.query("ROLLBACK;")
-		push_error("Could not commit the 9x9 rating update.")
 		return false
 	return true
 

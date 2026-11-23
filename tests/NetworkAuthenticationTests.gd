@@ -24,6 +24,13 @@ func _create_repository_fixture(db_name: String) -> Dictionary:
 		"correct-password",
 		"#00FF00"
 	)
+	UserDatabaseScript.create_user_with_avatar_transaction(
+		db,
+		"Bob",
+		"bob@example.com",
+		"correct-password",
+		"#0000FF"
+	)
 	var repository: UserRepository = UserRepositoryScript.new()
 	repository.database = db
 	return {"database": db, "repository": repository}
@@ -156,6 +163,74 @@ func test_profile_rating_response_updates_cache_and_emits_signal() -> void:
 
 	assert_dict(network.current_profile_ratings).is_equal(profile)
 	assert_array(received).contains([profile])
+
+func test_game_store_requires_a_valid_session_for_a_participant() -> void:
+	var network := _new_network()
+	var fixture := _create_repository_fixture("gdunit_network_game_store")
+	var manager: SessionManager = auto_free(SessionManagerScript.new())
+	var alice: Dictionary = fixture["repository"].login_user(
+		"alice@example.com",
+		"correct-password"
+	)
+	var session := manager.create_session(int(alice["id"]))
+	var game_data := {
+		"black_player_id": int(alice["id"]),
+		"white_player_id": 2,
+		"result": -1
+	}
+
+	var response: Dictionary = network._store_game(
+		session["token"],
+		game_data,
+		manager,
+		fixture["repository"]
+	)
+	assert_bool(response.is_empty()).is_false()
+	assert_int(int(response["result"])).is_equal(-1)
+	assert_that(network._store_game(
+		"invalid-token",
+		game_data,
+		manager,
+		fixture["repository"]
+	)).is_empty()
+
+	var non_participant := manager.create_session(3)
+	assert_that(network._store_game(
+		non_participant["token"],
+		game_data,
+		manager,
+		fixture["repository"]
+	)).is_empty()
+	_close_repository_fixture(fixture)
+
+func test_game_store_response_updates_game_and_player_ratings() -> void:
+	var network := _new_network()
+	var black := UserData.new()
+	black.id = 1
+	var white := UserData.new()
+	white.id = 2
+	var game := GameData.new()
+	game.black_player = black
+	game.white_player = white
+	network.current_game = game
+	var received: Array[Dictionary] = []
+	network.game_store_successful.connect(
+		func(response: Dictionary) -> void: received.append(response)
+	)
+	var response := {
+		"game_id": 42,
+		"result": 2,
+		"black_profile": {"unified_rating": 540.0},
+		"white_profile": {"unified_rating": 560.0}
+	}
+
+	network.send_game_store_successful(response)
+
+	assert_int(network.current_game.id).is_equal(42)
+	assert_int(network.current_game.result).is_equal(2)
+	assert_float(network.current_game.black_player.unified_rating).is_equal(540.0)
+	assert_float(network.current_game.white_player.unified_rating).is_equal(560.0)
+	assert_array(received).contains([response])
 
 func test_login_success_response_is_forwarded_to_client_signal() -> void:
 	var network := _new_network()

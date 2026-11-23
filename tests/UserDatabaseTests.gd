@@ -119,7 +119,7 @@ func test_database_initialization_backfills_ratings_for_existing_users() -> void
 	assert_float(float(rows[0]["rating_tsume_go"])).is_equal_approx(525.0, 0.000001)
 	UserDatabaseScript.close_database(db)
 
-func test_database_initialization_migrates_old_start_rating_and_adds_game_counts() -> void:
+func test_database_initialization_adds_missing_game_count_columns() -> void:
 	var db := _reset_test_db("gdunit_users_db_rating_count_migration")
 	UserDatabaseScript.create_user_with_avatar_transaction(
 		db,
@@ -131,10 +131,10 @@ func test_database_initialization_migrates_old_start_rating_and_adds_game_counts
 	db.query(
 		"""
 		UPDATE Ratings
-		SET rating_9x9 = 1918.4917143969326,
-			rating_13x13 = 1918.4917143969326,
-			rating_19x19 = 1918.4917143969326,
-			rating_tsume_go = 1918.4917143969326;
+		SET rating_9x9 = 600.0,
+			rating_13x13 = 700.0,
+			rating_19x19 = 800.0,
+			rating_tsume_go = 900.0;
 		"""
 	)
 	for count_column in ["games_9x9", "games_13x13", "games_19x19", "games_tsume_go"]:
@@ -145,13 +145,10 @@ func test_database_initialization_migrates_old_start_rating_and_adds_game_counts
 	db.query("SELECT * FROM Ratings;")
 	var rows: Array = db.query_result
 	assert_int(rows.size()).is_equal(1)
-	for rating_column in [
-		"rating_9x9",
-		"rating_13x13",
-		"rating_19x19",
-		"rating_tsume_go"
-	]:
-		assert_float(float(rows[0][rating_column])).is_equal_approx(525.0, 0.000001)
+	assert_float(float(rows[0]["rating_9x9"])).is_equal_approx(600.0, 0.000001)
+	assert_float(float(rows[0]["rating_13x13"])).is_equal_approx(700.0, 0.000001)
+	assert_float(float(rows[0]["rating_19x19"])).is_equal_approx(800.0, 0.000001)
+	assert_float(float(rows[0]["rating_tsume_go"])).is_equal_approx(900.0, 0.000001)
 	for count_column in ["games_9x9", "games_13x13", "games_19x19", "games_tsume_go"]:
 		assert_int(int(rows[0][count_column])).is_equal(0)
 	UserDatabaseScript.close_database(db)

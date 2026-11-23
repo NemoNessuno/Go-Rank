@@ -99,8 +99,6 @@ static func _initialize_tables(db: SQLite) -> bool:
 
 	if not _execute_sql(db, "INSERT OR IGNORE INTO Ratings (user_id) SELECT id FROM users;"):
 		return false
-	if not _migrate_legacy_starting_ratings(db):
-		return false
 
 	if not _execute_sql(db,
 		"""
@@ -283,25 +281,6 @@ static func _ensure_rating_game_count_columns(db: SQLite) -> bool:
 			db,
 			"ALTER TABLE Ratings ADD COLUMN %s INTEGER NOT NULL DEFAULT 0;" % column_name
 		):
-			return false
-	return true
-
-static func _migrate_legacy_starting_ratings(db: SQLite) -> bool:
-	for category in ["9x9", "13x13", "19x19", "tsume_go"]:
-		var rating_column := "rating_%s" % category
-		var games_column := "games_%s" % category
-		var sql := """
-			UPDATE Ratings
-			SET %s = %.15f
-			WHERE %s = 0 AND ABS(%s - %.15f) < 0.000001;
-		""" % [
-			rating_column,
-			RatingSystemScript.STARTING_RATING,
-			games_column,
-			rating_column,
-			RatingSystemScript.LEGACY_STARTING_RATING
-		]
-		if not _execute_sql(db, sql):
 			return false
 	return true
 

@@ -26,6 +26,7 @@ func _ready() -> void:
 	Network.user_creation_failed.connect(_on_user_creation_failed)
 	Network.login_successful.connect(_on_login_successful)
 	Network.login_failed.connect(_on_login_failed)
+	Network.session_restored.connect(_on_session_restored)
 	
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_client(SERVER_ADDRESS, SERVER_PORT)
@@ -36,7 +37,7 @@ func _ready() -> void:
 	
 	multiplayer.multiplayer_peer = peer
 	_set_status("Connecting to server …", NEUTRAL_COLOR)
-	multiplayer.connected_to_server.connect(func(): _set_status("Connected to server.", OK_COLOR))
+	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.server_disconnected.connect(func(): _set_status("Disonnected from server.", SIGNAL_COLOR))
 	
 	_sync_ui_mode()
@@ -47,7 +48,7 @@ func _on_connected_to_server() -> void:
 	var session := token_store.load_session()
 
 	if not session.is_empty():
-		Network.request_protected_data.rpc_id(
+		Network.request_restore_session.rpc_id(
 			1,
 			session["token"]
 		)
@@ -68,6 +69,9 @@ func _on_login_successful(response: Dictionary) -> void:
 	else:
 		token_store.clear_session()
 
+	_set_status("Login erfolgreich.", OK_COLOR)
+	
+func _on_session_restored(user_data: Dictionary) -> void:
 	_set_status("Login erfolgreich.", OK_COLOR)
 
 func _sync_ui_mode() -> void:

@@ -200,6 +200,16 @@ static func get_user_by_email(db_ref: SQLite, email: String) -> Dictionary:
 	if rows.is_empty():
 		return {}
 	return rows[0]
+	
+static func get_user_by_id(db_ref: SQLite, id: int) -> Dictionary:
+	if db_ref == null or id < 0:
+		return {}
+
+	db_ref.query("SELECT id, name, email, password, avatar_id FROM users WHERE id = '%d';" % id)
+	var rows: Array = db_ref.query_result
+	if rows.is_empty():
+		return {}
+	return rows[0]
 
 static func authenticate_user(db_ref: SQLite, email: String, password: String) -> bool:
 	if db_ref == null:

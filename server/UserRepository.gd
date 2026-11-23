@@ -17,3 +17,6 @@ func login_user(email: String,password: String) -> Dictionary:
 		return UserDatabase.get_user_by_email(database, email)
 	
 	return {}
+
+func get_user_by_id(id: int) -> Dictionary:
+	return UserDatabase.get_user_by_id(database, id)

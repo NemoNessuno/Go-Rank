@@ -3,6 +3,7 @@ extends Node
 signal user_creation_failed(message: String)
 signal login_successful(user_data: Dictionary)
 signal login_failed(message: String)
+signal session_restored(user_data: Dictionary)
 
 func create_user(
 	username: String,
@@ -46,7 +47,7 @@ func request_login_user(email: String, password: String) -> void:
 	var repository: UserRepository = get_tree().root \
 		.get_node("ServerMain/UserRepository")
 
-	var user: Dictionary = repository.authenticate_user(email, password)
+	var user: Dictionary = repository.login_user(email, password)
 
 	if user.is_empty():
 		send_login_failed.rpc_id(
@@ -69,7 +70,7 @@ func request_login_user(email: String, password: String) -> void:
 	)
 
 @rpc("any_peer", "call_remote", "reliable")
-func request_protected_data(token: String) -> void:
+func request_restore_session(token: String) -> void:
 	var sender_id := multiplayer.get_remote_sender_id()
 	var session_manager: SessionManager = get_tree().root \
 		.get_node("ServerMain/SessionManager")
@@ -77,7 +78,10 @@ func request_protected_data(token: String) -> void:
 	var session: Dictionary = session_manager.validate_token(token)
 
 	if session.is_empty():
-		send_authentication_required.rpc_id(sender_id)
+		send_login_failed.rpc_id(
+			sender_id,
+            "Session nicht gültig. Bitte erneut anmelden!"
+		)
 		return
 
 	var repository: UserRepository = get_tree().root \
@@ -87,7 +91,7 @@ func request_protected_data(token: String) -> void:
 		int(session["user_id"])
 	)
 
-	send_protected_data.rpc_id(sender_id, user_data)
+	send_session_restored.rpc_id(sender_id, user_data)
 
 @rpc("any_peer", "call_remote", "reliable")
 func request_logout(token: String) -> void:
@@ -104,16 +108,12 @@ func send_logout_successful() -> void:
 	pass
 
 @rpc("authority", "call_remote", "reliable")
-func send_authentication_required() -> void:
-	pass
+func send_login_successful(session_data: Dictionary) -> void:
+	login_successful.emit(session_data)
 
 @rpc("authority", "call_remote", "reliable")
-func send_protected_data(user_data: Dictionary) -> void:
-	pass
-
-@rpc("authority", "call_remote", "reliable")
-func send_login_successful(user_data: Dictionary) -> void:
-	login_successful.emit(user_data)
+func send_session_restored(user_data: Dictionary) -> void:
+	session_restored.emit(user_data)
 
 @rpc("authority", "call_remote", "reliable")
 func send_user_creation_failed(message: String) -> void:
@@ -122,3 +122,4 @@ func send_user_creation_failed(message: String) -> void:
 @rpc("authority", "call_remote", "reliable")
 func send_login_failed(message: String) -> void:
 	login_failed.emit(message)
+	

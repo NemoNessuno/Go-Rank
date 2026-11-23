@@ -64,6 +64,7 @@ text = "Already have an account? Log in"
 
 [node name="RememberMeCheckBox" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1217786189]
 layout_mode = 2
+button_pressed = true
 text = "Remember me"
 
 [node name="StatusLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=265657661]

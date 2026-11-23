@@ -18,9 +18,9 @@ func _reset_test_db(db_name: String) -> SQLite:
 
 func test_database_creation() -> void:
 	var db := _reset_test_db("gdunit_users_db_creation")
-	db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('avatars', 'users', 'games');")
+	db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND lower(name) IN ('avatars', 'users', 'games', 'ratings');")
 	var tables: Array = db.query_result
-	assert_int(tables.size()).is_equal(3)
+	assert_int(tables.size()).is_equal(4)
 	UserDatabaseScript.close_database(db)
 
 func test_user_creation() -> void:
@@ -32,6 +32,15 @@ func test_user_creation() -> void:
 	assert_that(user).is_not_empty()
 	assert_str(user.get("email", "")).is_equal("alice@example.com")
 	assert_str(user.get("name", "")).is_equal("Alice")
+	db.query("SELECT * FROM Ratings WHERE user_id = %d;" % int(user["id"]))
+	var ratings: Array = db.query_result
+	assert_int(ratings.size()).is_equal(1)
+	assert_float(float(ratings[0]["rating_9x9"])).is_equal_approx(525.0, 0.000001)
+	assert_float(float(ratings[0]["rating_13x13"])).is_equal_approx(525.0, 0.000001)
+	assert_float(float(ratings[0]["rating_19x19"])).is_equal_approx(525.0, 0.000001)
+	assert_float(float(ratings[0]["rating_tsume_go"])).is_equal_approx(525.0, 0.000001)
+	assert_float(float(ratings[0]["deviation_9x9"])).is_equal(350.0)
+	assert_float(float(ratings[0]["volatility_9x9"])).is_equal(0.06)
 	UserDatabaseScript.close_database(db)
 
 func test_user_authentication() -> void:
@@ -79,9 +88,70 @@ func test_transaction_rollback_removes_avatar_on_failed_user_creation() -> void:
 	assert_that(first_user).is_not_empty()
 	assert_int(UserDatabaseScript.get_user_count(db)).is_equal(1)
 	assert_int(UserDatabaseScript.get_avatar_count(db)).is_equal(1)
+	db.query("SELECT COUNT(*) AS count FROM Ratings;")
+	assert_int(int(db.query_result[0]["count"])).is_equal(1)
 
 	var second_user := UserDatabaseScript.create_user_with_avatar_transaction(db, "Charlie", "charlie@example.com", "otherpass", "#445566")
 	assert_that(second_user).is_empty()
 	assert_int(UserDatabaseScript.get_user_count(db)).is_equal(1)
 	assert_int(UserDatabaseScript.get_avatar_count(db)).is_equal(1)
+	db.query("SELECT COUNT(*) AS count FROM Ratings;")
+	assert_int(int(db.query_result[0]["count"])).is_equal(1)
+	UserDatabaseScript.close_database(db)
+
+func test_database_initialization_backfills_ratings_for_existing_users() -> void:
+	var db := _reset_test_db("gdunit_users_db_rating_migration")
+	UserDatabaseScript.create_user_with_avatar_transaction(
+		db,
+		"Legacy",
+		"legacy@example.com",
+		"password123",
+		"#112233"
+	)
+	db.query("DELETE FROM Ratings;")
+
+	assert_bool(UserDatabaseScript._initialize_tables(db)).is_true()
+
+	db.query("SELECT rating_9x9, rating_tsume_go FROM Ratings;")
+	var rows: Array = db.query_result
+	assert_int(rows.size()).is_equal(1)
+	assert_float(float(rows[0]["rating_9x9"])).is_equal_approx(525.0, 0.000001)
+	assert_float(float(rows[0]["rating_tsume_go"])).is_equal_approx(525.0, 0.000001)
+	UserDatabaseScript.close_database(db)
+
+func test_database_initialization_migrates_old_start_rating_and_adds_game_counts() -> void:
+	var db := _reset_test_db("gdunit_users_db_rating_count_migration")
+	UserDatabaseScript.create_user_with_avatar_transaction(
+		db,
+		"Legacy",
+		"legacy-counts@example.com",
+		"password123",
+		"#112233"
+	)
+	db.query(
+		"""
+		UPDATE Ratings
+		SET rating_9x9 = 1918.4917143969326,
+			rating_13x13 = 1918.4917143969326,
+			rating_19x19 = 1918.4917143969326,
+			rating_tsume_go = 1918.4917143969326;
+		"""
+	)
+	for count_column in ["games_9x9", "games_13x13", "games_19x19", "games_tsume_go"]:
+		db.query("ALTER TABLE Ratings DROP COLUMN %s;" % count_column)
+
+	assert_bool(UserDatabaseScript._initialize_tables(db)).is_true()
+
+	db.query("SELECT * FROM Ratings;")
+	var rows: Array = db.query_result
+	assert_int(rows.size()).is_equal(1)
+	for rating_column in [
+		"rating_9x9",
+		"rating_13x13",
+		"rating_19x19",
+		"rating_tsume_go"
+	]:
+		assert_float(float(rows[0][rating_column])).is_equal_approx(525.0, 0.000001)
+	for count_column in ["games_9x9", "games_13x13", "games_19x19", "games_tsume_go"]:
+		assert_int(int(rows[0][count_column])).is_equal(0)
 	UserDatabaseScript.close_database(db)

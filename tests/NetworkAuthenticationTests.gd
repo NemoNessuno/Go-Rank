@@ -115,6 +115,48 @@ func test_session_restore_rejects_unknown_and_expired_tokens() -> void:
 	)).is_empty()
 	_close_repository_fixture(fixture)
 
+func test_profile_ratings_are_returned_only_for_a_valid_session() -> void:
+	var network := _new_network()
+	var fixture := _create_repository_fixture("gdunit_network_profile_ratings")
+	var manager: SessionManager = auto_free(SessionManagerScript.new())
+	var user: Dictionary = fixture["repository"].login_user(
+		"alice@example.com",
+		"correct-password"
+	)
+	var session := manager.create_session(int(user["id"]))
+
+	var profile: Dictionary = network._get_profile_ratings(
+		session["token"],
+		manager,
+		fixture["repository"]
+	)
+
+	assert_float(float(profile["unified_rating"])).is_equal_approx(525.0, 0.000001)
+	assert_int(int(profile["games_played"])).is_equal(0)
+	assert_that(network._get_profile_ratings(
+		"invalid-token",
+		manager,
+		fixture["repository"]
+	)).is_empty()
+	_close_repository_fixture(fixture)
+
+func test_profile_rating_response_updates_cache_and_emits_signal() -> void:
+	var network := _new_network()
+	var profile := {
+		"categories": {"9x9": {"rating": 525.0, "games_played": 0}},
+		"unified_rating": 525.0,
+		"games_played": 0
+	}
+	var received: Array[Dictionary] = []
+	network.profile_ratings_received.connect(
+		func(data: Dictionary) -> void: received.append(data)
+	)
+
+	network.send_profile_ratings(profile)
+
+	assert_dict(network.current_profile_ratings).is_equal(profile)
+	assert_array(received).contains([profile])
+
 func test_login_success_response_is_forwarded_to_client_signal() -> void:
 	var network := _new_network()
 	var received: Array[Dictionary] = []

@@ -1,5 +1,7 @@
 extends Control
 
+const RatingSystemScript := preload("res://server/RatingSystem.gd")
+
 @onready var map_panel: Panel = $MapPanel
 @onready var sidebar: Panel = $Sidebar
 
@@ -8,7 +10,9 @@ var selected_user: UserData
 var user_buttons: Array[Button] = []
 var status_label: Label
 var selected_user_label: Label
+var unified_rating_label: Label
 var start_game_button: Button
+var profile_button: Button
 var logout_button: Button
 
 func _ready() -> void:
@@ -16,18 +20,44 @@ func _ready() -> void:
 	_ensure_world_container()
 	Network.users_received.connect(_on_users_received)
 	Network.users_request_failed.connect(_on_users_request_failed)
+	Network.profile_ratings_received.connect(_on_profile_ratings_received)
+	Network.profile_ratings_request_failed.connect(_on_profile_ratings_request_failed)
 	Network.logout_successful.connect(_on_logout_successful)
 
 	if Network.current_user == null:
 		status_label.text = "Please log in to view available players."
 		logout_button.disabled = true
+		profile_button.disabled = true
 		return
+
+	_update_unified_rating_label(Network.current_profile_ratings)
+	if not Network.request_profile_ratings() and Network.current_profile_ratings.is_empty():
+		unified_rating_label.text = "Unified rating unavailable."
 
 	status_label.text = "Loading players..."
 	Network.request_users()
 
 func _on_users_request_failed(message: String) -> void:
 	status_label.text = message
+
+func _on_profile_ratings_received(profile: Dictionary) -> void:
+	_update_unified_rating_label(profile)
+
+func _on_profile_ratings_request_failed(message: String) -> void:
+	unified_rating_label.text = message
+
+func _update_unified_rating_label(profile: Dictionary) -> void:
+	if profile.is_empty() or not profile.has("unified_rating"):
+		unified_rating_label.text = "Unified rating: Loading..."
+		return
+	var rating := float(profile["unified_rating"])
+	unified_rating_label.text = "Unified rating: %s (%.1f)" % [
+		RatingSystemScript.format_rank_label(rating),
+		rating
+	]
+
+func _on_profile_pressed() -> void:
+	get_tree().change_scene_to_file("res://client/scenes/UserProfile.tscn")
 
 func _build_sidebar() -> void:
 	var content := VBoxContainer.new()
@@ -48,6 +78,16 @@ func _build_sidebar() -> void:
 	subtitle.text = "Choose an opponent"
 	subtitle.add_theme_font_size_override("font_size", 18)
 	content.add_child(subtitle)
+
+	unified_rating_label = Label.new()
+	unified_rating_label.text = "Unified rating: Loading..."
+	content.add_child(unified_rating_label)
+
+	profile_button = Button.new()
+	profile_button.text = "View profile"
+	profile_button.pressed.connect(_on_profile_pressed)
+	profile_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(profile_button)
 
 	status_label = Label.new()
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -181,4 +221,5 @@ func _on_logout_successful() -> void:
 	TokenStore.new().clear_session()
 	Network.current_user = null
 	Network.session_token = ""
+	Network.current_profile_ratings.clear()
 	get_tree().change_scene_to_file("res://client/scenes/UserAuth.tscn")

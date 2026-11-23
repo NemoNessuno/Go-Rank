@@ -62,6 +62,7 @@ func _on_login_successful(response: Dictionary) -> void:
 	var expires_at: int = int(response["expires_at"])
 	Network.current_user = UserData.from_dictionary(user)
 	Network.session_token = token
+	Network.current_profile_ratings.clear()
 
 	if remember_checkbox.button_pressed:
 		token_store.save_session(
@@ -77,6 +78,7 @@ func _on_login_successful(response: Dictionary) -> void:
 	
 func _on_session_restored(user_data: Dictionary) -> void:
 	Network.current_user = UserData.from_dictionary(user_data)
+	Network.current_profile_ratings.clear()
 	_set_status("Login erfolgreich.", OK_COLOR)
 	get_tree().change_scene_to_file("res://client/scenes/Overworld.tscn")
 

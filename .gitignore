@@ -4,3 +4,6 @@
 
 # Debugging files
 .server.*
+
+# Test reports
+reports/

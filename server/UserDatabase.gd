@@ -3,6 +3,14 @@ extends RefCounted
 
 const DEFAULT_DB_PATH := "user://go_rank_server.sqlite"
 const AuthenticationScript := preload("res://server/Authentication.gd")
+const RatingSystemScript := preload("res://server/RatingSystem.gd")
+
+const RATING_GAME_COUNT_COLUMNS := [
+	"games_9x9",
+	"games_13x13",
+	"games_19x19",
+	"games_tsume_go"
+]
 
 static func _execute_sql(db: SQLite, sql: String) -> bool:
 	if not db.query(sql):
@@ -54,6 +62,44 @@ static func _initialize_tables(db: SQLite) -> bool:
 		);
 		"""
 	):
+		return false
+
+	if not _execute_sql(db,
+		"""
+		CREATE TABLE IF NOT EXISTS Ratings (
+			user_id INTEGER PRIMARY KEY,
+			rating_9x9 REAL NOT NULL DEFAULT 525.0,
+			deviation_9x9 REAL NOT NULL DEFAULT 350.0,
+			volatility_9x9 REAL NOT NULL DEFAULT 0.06,
+			last_played_9x9 INTEGER NOT NULL DEFAULT 0,
+			rating_13x13 REAL NOT NULL DEFAULT 525.0,
+			deviation_13x13 REAL NOT NULL DEFAULT 350.0,
+			volatility_13x13 REAL NOT NULL DEFAULT 0.06,
+			last_played_13x13 INTEGER NOT NULL DEFAULT 0,
+			rating_19x19 REAL NOT NULL DEFAULT 525.0,
+			deviation_19x19 REAL NOT NULL DEFAULT 350.0,
+			volatility_19x19 REAL NOT NULL DEFAULT 0.06,
+			last_played_19x19 INTEGER NOT NULL DEFAULT 0,
+			rating_tsume_go REAL NOT NULL DEFAULT 525.0,
+			deviation_tsume_go REAL NOT NULL DEFAULT 350.0,
+			volatility_tsume_go REAL NOT NULL DEFAULT 0.06,
+			last_played_tsume_go INTEGER NOT NULL DEFAULT 0,
+			games_9x9 INTEGER NOT NULL DEFAULT 0,
+			games_13x13 INTEGER NOT NULL DEFAULT 0,
+			games_19x19 INTEGER NOT NULL DEFAULT 0,
+			games_tsume_go INTEGER NOT NULL DEFAULT 0,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		);
+		"""
+	):
+		return false
+
+	if not _ensure_rating_game_count_columns(db):
+		return false
+
+	if not _execute_sql(db, "INSERT OR IGNORE INTO Ratings (user_id) SELECT id FROM users;"):
+		return false
+	if not _migrate_legacy_starting_ratings(db):
 		return false
 
 	if not _execute_sql(db,
@@ -137,6 +183,8 @@ static func create_user(db_ref: SQLite, name: String, email: String, password: S
 		var user := get_user_by_email(db_ref, email)
 		if user.is_empty():
 			transaction_ok = false
+		elif not _insert_initial_rating(db_ref, int(user["id"])):
+			transaction_ok = false
 
 	if transaction_ok:
 		db_ref.query("COMMIT;")
@@ -180,6 +228,8 @@ static func create_user_with_avatar_transaction(db_ref: SQLite, name: String, em
 			created_user = get_user_by_email(db_ref, email)
 			if created_user.is_empty():
 				transaction_ok = false
+			elif not _insert_initial_rating(db_ref, int(created_user["id"])):
+				transaction_ok = false
 
 	if transaction_ok:
 		db_ref.query("COMMIT;")
@@ -189,6 +239,71 @@ static func create_user_with_avatar_transaction(db_ref: SQLite, name: String, em
 	if avatar_id > 0:
 		db_ref.query("DELETE FROM avatars WHERE id = %d;" % avatar_id)
 	return {}
+
+static func _insert_initial_rating(db_ref: SQLite, user_id: int) -> bool:
+	var initial := RatingSystemScript.create_initial_rating()
+	var rating_value := "%.15f" % float(initial["rating"])
+	var deviation_value := "%.15f" % float(initial["deviation"])
+	var volatility_value := "%.15f" % float(initial["volatility"])
+	var sql := """
+		INSERT INTO Ratings (
+			user_id,
+			rating_9x9, deviation_9x9, volatility_9x9, last_played_9x9,
+			rating_13x13, deviation_13x13, volatility_13x13, last_played_13x13,
+			rating_19x19, deviation_19x19, volatility_19x19, last_played_19x19,
+			rating_tsume_go, deviation_tsume_go, volatility_tsume_go, last_played_tsume_go,
+			games_9x9, games_13x13, games_19x19, games_tsume_go
+		) VALUES (
+			%d,
+			%s, %s, %s, 0,
+			%s, %s, %s, 0,
+			%s, %s, %s, 0,
+			%s, %s, %s, 0,
+			0, 0, 0, 0
+		);
+	""" % [
+		user_id,
+		rating_value, deviation_value, volatility_value,
+		rating_value, deviation_value, volatility_value,
+		rating_value, deviation_value, volatility_value,
+		rating_value, deviation_value, volatility_value
+	]
+	return _execute_statement(db_ref, sql)
+
+static func _ensure_rating_game_count_columns(db: SQLite) -> bool:
+	db.query("PRAGMA table_info(Ratings);")
+	var existing_columns: Dictionary = {}
+	for column in db.query_result:
+		existing_columns[String(column.get("name", ""))] = true
+
+	for column_name in RATING_GAME_COUNT_COLUMNS:
+		if existing_columns.has(column_name):
+			continue
+		if not _execute_sql(
+			db,
+			"ALTER TABLE Ratings ADD COLUMN %s INTEGER NOT NULL DEFAULT 0;" % column_name
+		):
+			return false
+	return true
+
+static func _migrate_legacy_starting_ratings(db: SQLite) -> bool:
+	for category in ["9x9", "13x13", "19x19", "tsume_go"]:
+		var rating_column := "rating_%s" % category
+		var games_column := "games_%s" % category
+		var sql := """
+			UPDATE Ratings
+			SET %s = %.15f
+			WHERE %s = 0 AND ABS(%s - %.15f) < 0.000001;
+		""" % [
+			rating_column,
+			RatingSystemScript.STARTING_RATING,
+			games_column,
+			rating_column,
+			RatingSystemScript.LEGACY_STARTING_RATING
+		]
+		if not _execute_sql(db, sql):
+			return false
+	return true
 
 static func get_user_by_email(db_ref: SQLite, email: String) -> Dictionary:
 	if db_ref == null or email.strip_edges().is_empty():

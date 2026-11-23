@@ -23,3 +23,17 @@ func get_user_by_id(id: int) -> Dictionary:
 
 func get_users() -> Array:
 	return UserDatabase.get_users(database)
+
+func get_9x9_rating(user_id: int) -> Dictionary:
+	return RatingRepository.get_9x9_rating(database, user_id)
+
+func get_profile_ratings(user_id: int) -> Dictionary:
+	return RatingRepository.get_profile_ratings(database, user_id)
+
+func record_9x9_game(player_id: int, opponent_id: int, player_score: float) -> bool:
+	return RatingRepository.record_9x9_game(
+		database,
+		player_id,
+		opponent_id,
+		player_score
+	)

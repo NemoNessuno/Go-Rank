@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 
 const UserDatabaseScript := preload("res://server/scripts/database/UserDatabase.gd")
 const UserRepositoryScript := preload("res://server/scripts/database/UserRepository.gd")
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
 
 func _test_db_path(db_name: String) -> String:
 	return "user://%s.sqlite" % db_name
@@ -39,7 +40,9 @@ func test_user_creation() -> void:
 	assert_float(float(ratings[0]["rating_13x13"])).is_equal_approx(525.0, 0.000001)
 	assert_float(float(ratings[0]["rating_19x19"])).is_equal_approx(525.0, 0.000001)
 	assert_float(float(ratings[0]["rating_tsume_go"])).is_equal_approx(525.0, 0.000001)
-	assert_float(float(ratings[0]["deviation_9x9"])).is_equal(350.0)
+	assert_float(float(ratings[0]["deviation_9x9"])).is_equal(
+		RatingSystemScript.INITIAL_DEVIATION
+	)
 	assert_float(float(ratings[0]["volatility_9x9"])).is_equal(0.06)
 	UserDatabaseScript.close_database(db)
 

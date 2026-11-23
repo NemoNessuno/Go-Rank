@@ -14,11 +14,11 @@ func test_30_kyu_uses_ogs_logarithmic_rating_scale() -> void:
 		0.000001
 	)
 
-func test_new_rating_has_ogs_glicko2_initial_deviation_and_volatility() -> void:
+func test_new_rating_has_initial_deviation_and_volatility() -> void:
 	var rating := RatingSystemScript.create_initial_rating()
 
 	assert_float(float(rating["rating"])).is_equal_approx(525.0, 0.000001)
-	assert_float(float(rating["deviation"])).is_equal(350.0)
+	assert_float(float(rating["deviation"])).is_equal(100.0)
 	assert_float(float(rating["volatility"])).is_equal(0.06)
 	assert_int(int(rating["last_played_at"])).is_equal(0)
 
@@ -62,6 +62,14 @@ func test_winning_increases_rating_and_invalid_score_is_rejected() -> void:
 
 	assert_float(float(won["rating"])).is_greater(RatingSystemScript.STARTING_RATING)
 	assert_that(RatingSystemScript.update_after_game(initial, initial, 1.1)).is_empty()
+
+func test_equal_30_kyu_win_does_not_jump_to_24_kyu() -> void:
+	var initial := RatingSystemScript.create_initial_rating()
+	var winner := RatingSystemScript.update_after_game(initial, initial, 1.0)
+
+	assert_str(RatingSystemScript.format_rank_label(float(winner["rating"]))).is_equal(
+		"29 kyu"
+	)
 
 func test_unified_rating_weights_category_ratings_by_games_played() -> void:
 	var unified := RatingSystemScript.calculate_unified_rating({

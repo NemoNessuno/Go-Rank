@@ -37,6 +37,9 @@ func test_recording_9x9_game_updates_both_players_only_in_9x9_category() -> void
 	var first_after := RatingRepositoryScript.get_9x9_rating(_db, user_ids[0])
 	var second_after := RatingRepositoryScript.get_9x9_rating(_db, user_ids[1])
 	assert_float(float(first_after["rating"])).is_greater(float(first_before["rating"]))
+	assert_str(RatingSystemScript.format_rank_label(float(first_after["rating"]))).is_equal(
+		"29 kyu"
+	)
 	assert_float(float(second_after["rating"])).is_greater_equal(
 		RatingSystemScript.STARTING_RATING
 	)

@@ -7,6 +7,7 @@ const GameBoardRulesScript = preload("res://client/scripts/GameBoard/GameBoardRu
 const GameBoardFileManagerScript = preload("res://client/scripts/GameBoard/GameBoardFileManager.gd")
 const GameBoardVariationTreeScript = preload("res://client/scripts/GameBoard/GameBoardVariationTree.gd")
 const GameBoardScoringScript = preload("res://client/scripts/GameBoard/GameBoardScoring.gd")
+const VariationGraphViewScript = preload("res://client/scripts/GameBoard/VariationGraphView.gd")
 const RatingSystemScript = preload("res://server/scripts/ratings/RatingSystem.gd")
 
 const BOARD_SIZE := GameBoardStateScript.BOARD_SIZE
@@ -85,7 +86,7 @@ var load_dialog: FileDialog
 var back_button: Button
 var restart_button: Button
 var board_surface: Control
-var variation_tree: GraphEdit
+var variation_tree: VariationGraphViewScript
 var territory_dots: Array = []
 var variation_nodes: Dictionary:
 	get:
@@ -208,8 +209,8 @@ func _screen_to_cell(screen_position: Vector2) -> Vector2i:
 func _cell_center(x: int, y: int) -> Vector2:
 	return Vector2(board_origin.x + x * board_step, board_origin.y + y * board_step)
 
-func _on_variation_tree_item_selected(node: GraphNode = null) -> void:
-	variation_manager.on_item_selected(node)
+func _on_variation_tree_item_selected(node_id: int) -> void:
+	variation_manager.on_item_selected(node_id)
 
 func _play_move(x: int, y: int) -> void:
 	var move_data : Dictionary = rules_manager.play_move(x, y)

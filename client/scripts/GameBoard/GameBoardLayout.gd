@@ -1,6 +1,8 @@
 class_name GameBoardLayout
 extends RefCounted
 
+const VariationGraphViewScript := preload("res://client/scripts/GameBoard/VariationGraphView.gd")
+
 var owner: Control
 var surface: Control
 
@@ -10,8 +12,8 @@ func attach(board_owner: Control, surface_owner: Control = null) -> void:
 
 func build_ui() -> void:
 	owner.variation_tree = owner.get_node_or_null(
-		"RootVBox/MainHBox/VariationTree/VariationVBox/VariationGraph"
-	) as GraphEdit
+		"RootVBox/MainHBox/VariationTree/VariationVBox/VariationScroll/VariationGraphView"
+	) as VariationGraphViewScript
 	owner.status_label = owner.get_node_or_null("RootVBox/MainHBox/LeftPanel/StatusLabel") as Label
 	owner.black_player_label = owner.get_node_or_null("RootVBox/MainHBox/LeftPanel/BlackPlayerLabel") as Label
 	owner.white_player_label = owner.get_node_or_null("RootVBox/MainHBox/LeftPanel/WhitePlayerLabel") as Label
@@ -34,12 +36,6 @@ func build_ui() -> void:
 	owner.store_game_button.pressed.connect(owner._store_game)
 	owner.load_sgf_button.pressed.connect(owner._load_sgf)
 	owner.variation_tree.node_selected.connect(owner._on_variation_tree_item_selected)
-	if "show_menu" in owner.variation_tree:
-		owner.variation_tree.show_menu = false
-	if "show_zoom_buttons" in owner.variation_tree:
-		owner.variation_tree.show_zoom_buttons = false
-	if "show_minimap" in owner.variation_tree:
-		owner.variation_tree.show_minimap = false
 
 	_build_file_dialogs(owner)
 

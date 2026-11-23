@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://client/scripts/GameBoard/VariationTreeNode.gd" id="1_node"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_node"]
+bg_color = Color(0.0901961, 0.0901961, 0.0901961, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.658824, 0.658824, 0.658824, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="VariationTreeNode" type="Button"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+text = ""
+alignment = 1
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_node")
+theme_override_styles/hover = SubResource("StyleBoxFlat_node")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_node")
+theme_override_styles/focus = SubResource("StyleBoxFlat_node")
+script = ExtResource("1_node")

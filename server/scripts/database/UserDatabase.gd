@@ -2,8 +2,8 @@ class_name UserDatabase
 extends RefCounted
 
 const DEFAULT_DB_PATH := "user://go_rank_server.sqlite"
-const AuthenticationScript := preload("res://server/Authentication.gd")
-const RatingSystemScript := preload("res://server/RatingSystem.gd")
+const AuthenticationScript := preload("res://server/scripts/session/Authentication.gd")
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
 
 const RATING_GAME_COUNT_COLUMNS := [
 	"games_9x9",

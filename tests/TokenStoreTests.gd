@@ -1,7 +1,7 @@
 class_name TokenStoreTests
 extends GdUnitTestSuite
 
-const TokenStoreScript := preload("res://common/TokenStore.gd")
+const TokenStoreScript := preload("res://common/scripts/logic/TokenStore.gd")
 
 var _test_paths: Array[String] = []
 

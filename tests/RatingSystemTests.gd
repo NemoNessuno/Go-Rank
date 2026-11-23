@@ -1,7 +1,7 @@
 class_name RatingSystemTests
 extends GdUnitTestSuite
 
-const RatingSystemScript := preload("res://server/RatingSystem.gd")
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
 
 func test_30_kyu_uses_ogs_logarithmic_rating_scale() -> void:
 	var rating := RatingSystemScript.rank_to_rating(0.0)

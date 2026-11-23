@@ -1,10 +1,10 @@
 class_name NetworkAuthenticationTests
 extends GdUnitTestSuite
 
-const NetworkScript := preload("res://common/Network.gd")
-const SessionManagerScript := preload("res://server/SessionManager.gd")
-const UserDatabaseScript := preload("res://server/UserDatabase.gd")
-const UserRepositoryScript := preload("res://server/UserRepository.gd")
+const NetworkScript := preload("res://common/scripts/logic/Network.gd")
+const SessionManagerScript := preload("res://server/scripts/session/SessionManager.gd")
+const UserDatabaseScript := preload("res://server/scripts/database/UserDatabase.gd")
+const UserRepositoryScript := preload("res://server/scripts/database/UserRepository.gd")
 
 func _new_network() -> Node:
 	var network: Node = NetworkScript.new()

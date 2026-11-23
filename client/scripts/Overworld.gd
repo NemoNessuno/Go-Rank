@@ -1,6 +1,6 @@
 extends Control
 
-const RatingSystemScript := preload("res://server/RatingSystem.gd")
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
 const UserButtonScene := preload("res://client/scenes/UserButton.tscn")
 
 @onready var world_container: GridContainer = $MapPanel/WorldContainer

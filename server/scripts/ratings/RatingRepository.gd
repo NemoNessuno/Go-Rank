@@ -1,7 +1,7 @@
 class_name RatingRepository
 extends RefCounted
 
-const RatingSystemScript := preload("res://server/RatingSystem.gd")
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
 
 static func get_9x9_rating(db: SQLite, user_id: int) -> Dictionary:
 	if db == null or user_id <= 0:

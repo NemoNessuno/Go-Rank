@@ -1,8 +1,8 @@
 class_name UserDatabaseTests
 extends GdUnitTestSuite
 
-const UserDatabaseScript := preload("res://server/UserDatabase.gd")
-const UserRepositoryScript := preload("res://server/UserRepository.gd")
+const UserDatabaseScript := preload("res://server/scripts/database/UserDatabase.gd")
+const UserRepositoryScript := preload("res://server/scripts/database/UserRepository.gd")
 
 func _test_db_path(db_name: String) -> String:
 	return "user://%s.sqlite" % db_name

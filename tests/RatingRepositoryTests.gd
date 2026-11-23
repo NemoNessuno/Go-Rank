@@ -1,9 +1,9 @@
 class_name RatingRepositoryTests
 extends GdUnitTestSuite
 
-const UserDatabaseScript := preload("res://server/UserDatabase.gd")
-const RatingRepositoryScript := preload("res://server/RatingRepository.gd")
-const RatingSystemScript := preload("res://server/RatingSystem.gd")
+const UserDatabaseScript := preload("res://server/scripts/database/UserDatabase.gd")
+const RatingRepositoryScript := preload("res://server/scripts/ratings/RatingRepository.gd")
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
 
 var _db: SQLite
 

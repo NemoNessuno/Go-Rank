@@ -1,7 +1,7 @@
 class_name SessionManagerTests
 extends GdUnitTestSuite
 
-const SessionManagerScript := preload("res://server/SessionManager.gd")
+const SessionManagerScript := preload("res://server/scripts/session/SessionManager.gd")
 
 func test_create_session_returns_valid_token_and_expiration() -> void:
 	var manager: SessionManager = auto_free(SessionManagerScript.new())

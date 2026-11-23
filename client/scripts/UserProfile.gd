@@ -1,6 +1,6 @@
 extends Control
 
-const RatingSystemScript := preload("res://server/RatingSystem.gd")
+const RatingSystemScript := preload("res://server/scripts/ratings/RatingSystem.gd")
 
 @onready var avatar_panel: PanelContainer = $ProfilePanel/MarginContainer/Layout/Content/Identity/AvatarCenter/AvatarPanel
 @onready var avatar_initial: Label = $ProfilePanel/MarginContainer/Layout/Content/Identity/AvatarCenter/AvatarPanel/AvatarInitial

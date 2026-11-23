@@ -20,3 +20,6 @@ func login_user(email: String,password: String) -> Dictionary:
 
 func get_user_by_id(id: int) -> Dictionary:
 	return UserDatabase.get_user_by_id(database, id)
+
+func get_users() -> Array:
+	return UserDatabase.get_users(database)

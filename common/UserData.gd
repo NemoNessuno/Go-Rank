@@ -12,7 +12,7 @@ func to_dictionary() -> Dictionary:
 		"id": id,
 		"name": name,
 		"email": email,
-		"avatar_id": avatar.id,
+		"avatar_id": avatar.id if avatar != null else 0,
 		"game_id": game_id,
 	}
 
@@ -23,6 +23,12 @@ static func from_dictionary(data: Dictionary) -> UserData:
 	user.id = int(data.get("id", 0))
 	user.name = String(data.get("name", ""))
 	user.email = String(data.get("email", ""))
-	user.avatar = data.get("avatar", null)
-	user.game = data.get("game", null)
+	var avatar_data: Dictionary = data.get("avatar", {})
+	if not avatar_data.is_empty():
+		user.avatar = AvatarData.from_dictionary(avatar_data)
+	elif data.has("avatar_id"):
+		user.avatar = AvatarData.new()
+		user.avatar.id = int(data.get("avatar_id", 0))
+		user.avatar.color = String(data.get("avatar_color", "#000000"))
+	user.game_id = int(data.get("game_id", -1))
 	return user

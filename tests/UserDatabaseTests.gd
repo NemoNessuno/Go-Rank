@@ -2,6 +2,7 @@ class_name UserDatabaseTests
 extends GdUnitTestSuite
 
 const UserDatabaseScript := preload("res://server/UserDatabase.gd")
+const UserRepositoryScript := preload("res://server/UserRepository.gd")
 
 func _test_db_path(db_name: String) -> String:
 	return "user://%s.sqlite" % db_name
@@ -40,6 +41,35 @@ func test_user_authentication() -> void:
 
 	assert_bool(UserDatabaseScript.authenticate_user(db, "bob@example.com", "supersecure")).is_true()
 	assert_bool(UserDatabaseScript.authenticate_user(db, "bob@example.com", "wrong-password")).is_false()
+	assert_bool(UserDatabaseScript.authenticate_user(db, "missing@example.com", "supersecure")).is_false()
+	UserDatabaseScript.close_database(db)
+
+func test_user_repository_login_success_and_failure_paths() -> void:
+	var db := _reset_test_db("gdunit_users_repository_login")
+	var avatar_id := UserDatabaseScript.create_avatar(db, "#00FF00")
+	UserDatabaseScript.create_user(db, "Bob", "bob@example.com", "supersecure", avatar_id)
+	var repository: UserRepository = UserRepositoryScript.new()
+	repository.database = db
+
+	var user := repository.login_user("bob@example.com", "supersecure")
+	assert_str(user.get("name", "")).is_equal("Bob")
+	assert_that(repository.login_user("bob@example.com", "wrong-password")).is_empty()
+	assert_that(repository.login_user("missing@example.com", "supersecure")).is_empty()
+
+	repository.free()
+	UserDatabaseScript.close_database(db)
+
+func test_get_users_returns_public_user_data_and_avatar_color() -> void:
+	var db := _reset_test_db("gdunit_users_db_list")
+	var avatar_id := UserDatabaseScript.create_avatar(db, "#00FF00")
+	UserDatabaseScript.create_user(db, "Bob", "bob@example.com", "supersecure", avatar_id)
+
+	var users: Array = UserDatabaseScript.get_users(db)
+	assert_int(users.size()).is_equal(1)
+	assert_int(int(users[0]["id"])).is_greater(0)
+	assert_str(users[0]["name"]).is_equal("Bob")
+	assert_str(users[0]["avatar_color"]).is_equal("#00FF00")
+	assert_bool(users[0].has("password")).is_false()
 	UserDatabaseScript.close_database(db)
 
 func test_transaction_rollback_removes_avatar_on_failed_user_creation() -> void:

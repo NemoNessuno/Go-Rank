@@ -211,6 +211,21 @@ static func get_user_by_id(db_ref: SQLite, id: int) -> Dictionary:
 		return {}
 	return rows[0]
 
+static func get_users(db_ref: SQLite) -> Array:
+	if db_ref == null:
+		return []
+
+	db_ref.query(
+		"""
+		SELECT users.id, users.name, users.email, users.avatar_id,
+			avatars.color AS avatar_color
+		FROM users
+		LEFT JOIN avatars ON avatars.id = users.avatar_id
+		ORDER BY users.name;
+		"""
+	)
+	return db_ref.query_result
+
 static func authenticate_user(db_ref: SQLite, email: String, password: String) -> bool:
 	if db_ref == null:
 		return false

@@ -48,6 +48,7 @@ func _on_connected_to_server() -> void:
 	var session := token_store.load_session()
 
 	if not session.is_empty():
+		Network.session_token = String(session["token"])
 		Network.request_restore_session.rpc_id(
 			1,
 			session["token"]
@@ -59,6 +60,8 @@ func _on_login_successful(response: Dictionary) -> void:
 	var user: Dictionary = response["user"]
 	var token: String = response["token"]
 	var expires_at: int = int(response["expires_at"])
+	Network.current_user = UserData.from_dictionary(user)
+	Network.session_token = token
 
 	if remember_checkbox.button_pressed:
 		token_store.save_session(
@@ -70,9 +73,12 @@ func _on_login_successful(response: Dictionary) -> void:
 		token_store.clear_session()
 
 	_set_status("Login erfolgreich.", OK_COLOR)
+	get_tree().change_scene_to_file("res://client/scenes/Overworld.tscn")
 	
 func _on_session_restored(user_data: Dictionary) -> void:
+	Network.current_user = UserData.from_dictionary(user_data)
 	_set_status("Login erfolgreich.", OK_COLOR)
+	get_tree().change_scene_to_file("res://client/scenes/Overworld.tscn")
 
 func _sync_ui_mode() -> void:
 	name_edit.visible = create_mode
